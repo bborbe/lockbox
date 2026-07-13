@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lockbox
+  namespace: '{{ "NAMESPACE" | env }}'
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: 'traefik'
+  rules:
+    - host: 'lockbox.{{ "NAMESPACE" | env }}.quant.benjamin-borbe.de'
+      http:
+        paths:
+          - backend:
+              service:
+                name: lockbox
+                port:
+                  name: http
+            path: /
+            pathType: Prefix
+  tls:
+    - secretName: tls-quant
+      hosts:
+        - 'lockbox.{{ "NAMESPACE" | env }}.quant.benjamin-borbe.de'
