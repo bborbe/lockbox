@@ -32,3 +32,19 @@ type SearchResults struct {
 type SearchResult struct {
 	APIURL string `json:"api_url"`
 }
+
+// UpsertRequest is the body of PUT /api/secrets/{key}/ — creates or replaces
+// the secret stored under key.
+type UpsertRequest struct {
+	Username string `json:"username"`
+	URL      string `json:"url"`
+	Password string `json:"password"`
+	File     string `json:"file"`
+}
+
+// UpsertResult is the body returned by PUT /api/secrets/{key}/ on success; the
+// api_url points at the secret's metadata endpoint (same shape as SearchResult
+// so clients can treat both uniformly).
+type UpsertResult struct {
+	APIURL string `json:"api_url"`
+}

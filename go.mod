@@ -8,6 +8,7 @@ require (
 	github.com/bborbe/http v1.26.17
 	github.com/bborbe/kv v1.21.6
 	github.com/bborbe/log v1.6.18
+	github.com/bborbe/memorykv v1.6.5
 	github.com/bborbe/metrics v0.5.8
 	github.com/bborbe/run v1.9.31
 	github.com/bborbe/sentry v1.9.23
@@ -42,6 +43,7 @@ require (
 	github.com/prometheus/procfs v0.21.0 // indirect
 	go.etcd.io/bbolt v1.5.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	golang.org/x/exp v0.0.0-20260611194520-c48552f49976 // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect

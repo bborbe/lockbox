@@ -114,4 +114,6 @@ func (a *application) registerAPI(router *mux.Router, prefix string, store secre
 		Handler(auth(handler.NewRevisionDataHandler(store)))
 	router.Path(prefix + "/secrets/").Methods(http.MethodGet).
 		Handler(auth(handler.NewSecretSearchHandler(store)))
+	router.Path(prefix + "/secrets/{key}/").Methods(http.MethodPut).
+		Handler(auth(handler.NewSecretUpsertHandler(store)))
 }

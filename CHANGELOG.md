@@ -11,9 +11,11 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 - Add TeamVault-compatible read API: `GET /api/secrets/{key}/`, `GET /api/secret-revisions/{key}/data`, `GET /api/secrets/?search=`
+- Add TeamVault-compatible write API: `PUT /api/secrets/{key}/` (upsert), on both `/api` and `/api/v1`, Basic-auth protected
 - kv-backed secret store on `bborbe/kv` (BoltDB), no Postgres
 - Dual `/api/` + `/api/v1/` routing; HTTP Basic auth on the business API
 - Drop Kafka from the service skeleton (Lockbox is not a consumer)
+- Add Ginkgo tests: `pkg/secret` store (memorykv backend), all handlers (counterfeiter mocks), `NewBasicAuth`, and a full TeamVault-contract test in `main_test.go` covering PUT/GET round-trip, search, and auth on both API prefixes
 
 ## v0.0.1
 
