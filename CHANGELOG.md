@@ -8,6 +8,13 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
+## Unreleased
+
+- Add TeamVault-compatible read API: `GET /api/secrets/{key}/`, `GET /api/secret-revisions/{key}/data`, `GET /api/secrets/?search=`
+- kv-backed secret store on `bborbe/kv` (BoltDB), no Postgres
+- Dual `/api/` + `/api/v1/` routing; HTTP Basic auth on the business API
+- Drop Kafka from the service skeleton (Lockbox is not a consumer)
+
 ## v0.0.1
 
 - Initial commit
