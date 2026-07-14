@@ -17,6 +17,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 - refactor: extract `keyring.Parse` as the shared single source of truth for the exactly-one key env-var parsing rule used by both the server and the re-encrypt command
 - test: add `pkg/secret/reencrypt_test.go` integration tests covering full primary-key conversion, idempotent re-runs, and legacy un-framed blob sweeping
 - test: add `Describe("Parse", ...)` unit tests in `pkg/keyring/keyring_test.go` covering AC-6/7/8 cases
+- docs: Document the keyring, rotation-by-restart flow, and cmd/reencrypt in README and example.env
 
 ## v0.5.0
 

@@ -1,8 +1,13 @@
 ---
-status: approved
+status: completed
 spec: [002-keyring-key-rotation]
+summary: Documented keyring, rotation-by-restart flow, and cmd/reencrypt in README.md, updated example.env with multi-key example, and appended docs bullet to CHANGELOG.md Unreleased section
+execution_id: lockbox-exec-011-spec-002-docs-and-contract-check
+dark-factory-version: dev
 created: "2026-07-14T19:50:07Z"
 queued: "2026-07-14T20:02:53Z"
+started: "2026-07-14T20:23:05Z"
+completed: "2026-07-14T20:25:06Z"
 branch: dark-factory/keyring-key-rotation
 ---
 
