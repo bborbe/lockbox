@@ -6,7 +6,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"net/http"
 	"os"
 	"time"
@@ -28,6 +27,7 @@ import (
 
 	"github.com/bborbe/lockbox/pkg/factory"
 	"github.com/bborbe/lockbox/pkg/handler"
+	"github.com/bborbe/lockbox/pkg/keyring"
 	"github.com/bborbe/lockbox/pkg/secret"
 )
 
@@ -37,16 +37,17 @@ func main() {
 }
 
 type application struct {
-	SentryDSN         string            `required:"false" arg:"sentry-dsn"        env:"SENTRY_DSN"             usage:"Sentry DSN (optional; empty disables Sentry)"                               display:"length"`
-	SentryProxy       string            `required:"false" arg:"sentry-proxy"      env:"SENTRY_PROXY"           usage:"Sentry Proxy"`
-	Listen            string            `required:"true"  arg:"listen"            env:"LISTEN"                 usage:"address to listen to"`
-	DataDir           string            `required:"true"  arg:"datadir"           env:"DATADIR"                usage:"data directory"`
-	BasicAuthUsername string            `required:"true"  arg:"basic-auth-user"   env:"BASIC_AUTH_USER"        usage:"HTTP Basic auth username for the /api endpoints"`
-	BasicAuthPassword string            `required:"true"  arg:"basic-auth-pass"   env:"BASIC_AUTH_PASS"        usage:"HTTP Basic auth password for the /api endpoints"                            display:"length"`
-	EncryptionKey     string            `required:"true"  arg:"encryption-key"    env:"LOCKBOX_ENCRYPTION_KEY" usage:"base64-encoded AES key (16 or 32 raw bytes) used to encrypt stored secrets" display:"length"`
-	BuildGitVersion   string            `required:"false" arg:"build-git-version" env:"BUILD_GIT_VERSION"      usage:"Build Git version"                                                                           default:"dev"`
-	BuildGitCommit    string            `required:"false" arg:"build-git-commit"  env:"BUILD_GIT_COMMIT"       usage:"Build Git commit hash"                                                                       default:"none"`
-	BuildDate         *libtime.DateTime `required:"false" arg:"build-date"        env:"BUILD_DATE"             usage:"Build timestamp (RFC3339)"`
+	SentryDSN         string            `required:"false" arg:"sentry-dsn"        env:"SENTRY_DSN"              usage:"Sentry DSN (optional; empty disables Sentry)"                                                                             display:"length"`
+	SentryProxy       string            `required:"false" arg:"sentry-proxy"      env:"SENTRY_PROXY"            usage:"Sentry Proxy"`
+	Listen            string            `required:"true"  arg:"listen"            env:"LISTEN"                  usage:"address to listen to"`
+	DataDir           string            `required:"true"  arg:"datadir"           env:"DATADIR"                 usage:"data directory"`
+	BasicAuthUsername string            `required:"true"  arg:"basic-auth-user"   env:"BASIC_AUTH_USER"         usage:"HTTP Basic auth username for the /api endpoints"`
+	BasicAuthPassword string            `required:"true"  arg:"basic-auth-pass"   env:"BASIC_AUTH_PASS"         usage:"HTTP Basic auth password for the /api endpoints"                                                                          display:"length"`
+	EncryptionKey     string            `required:"false" arg:"encryption-key"    env:"LOCKBOX_ENCRYPTION_KEY"  usage:"base64-encoded AES key (16 or 32 raw bytes) used to encrypt stored secrets"                                               display:"length"`
+	EncryptionKeys    string            `required:"false" arg:"encryption-keys"   env:"LOCKBOX_ENCRYPTION_KEYS" usage:"comma-separated base64 AES keys (16 or 32 raw bytes each), primary first; mutually exclusive with LOCKBOX_ENCRYPTION_KEY" display:"length"`
+	BuildGitVersion   string            `required:"false" arg:"build-git-version" env:"BUILD_GIT_VERSION"       usage:"Build Git version"                                                                                                                         default:"dev"`
+	BuildGitCommit    string            `required:"false" arg:"build-git-commit"  env:"BUILD_GIT_COMMIT"        usage:"Build Git commit hash"                                                                                                                     default:"none"`
+	BuildDate         *libtime.DateTime `required:"false" arg:"build-date"        env:"BUILD_DATE"              usage:"Build timestamp (RFC3339)"`
 }
 
 func (a *application) Run(ctx context.Context, sentryClient libsentry.Client) error {
@@ -69,25 +70,13 @@ func (a *application) Run(ctx context.Context, sentryClient libsentry.Client) er
 	)
 }
 
-// createCrypter parses and validates LOCKBOX_ENCRYPTION_KEY and returns a
-// Crypter for it. The key must base64-decode to exactly 16 or 32 raw bytes
-// (AES-128 or AES-256); the app refuses to start otherwise.
+// createCrypter returns a Crypter backed by a keyring. Exactly one of
+// LOCKBOX_ENCRYPTION_KEY (single key) or LOCKBOX_ENCRYPTION_KEYS (comma-separated
+// base64 list, primary first) must be set; the server refuses to start if neither
+// is set, both are set, or any key material is invalid (bad base64, wrong byte
+// length, or duplicate keys).
 func (a *application) createCrypter(ctx context.Context) (crypto.Crypter, error) {
-	raw, err := base64.StdEncoding.DecodeString(a.EncryptionKey)
-	if err != nil {
-		return nil, errors.Wrap(ctx, err, "decode LOCKBOX_ENCRYPTION_KEY base64 failed")
-	}
-	switch len(raw) {
-	case 16, 32:
-		// AES-128 or AES-256, valid.
-	default:
-		return nil, errors.Errorf(
-			ctx,
-			"LOCKBOX_ENCRYPTION_KEY must decode to 16 or 32 bytes, got %d",
-			len(raw),
-		)
-	}
-	return crypto.NewCrypter(crypto.SecretKey(raw)), nil
+	return keyring.Parse(ctx, a.EncryptionKey, a.EncryptionKeys)
 }
 
 func (a *application) createHTTPServer(

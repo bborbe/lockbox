@@ -20,6 +20,7 @@ import (
 	"github.com/onsi/gomega/format"
 
 	"github.com/bborbe/lockbox/pkg/api"
+	"github.com/bborbe/lockbox/pkg/keyring"
 	"github.com/bborbe/lockbox/pkg/secret"
 )
 
@@ -583,4 +584,101 @@ var _ = Describe("createCrypter", func() {
 		_, err := app.createCrypter(ctx)
 		Expect(err).NotTo(BeNil())
 	})
+
+	// -------------------------------------------------------------------------
+	// Back-compat single-key still boots (AC 6)
+	// -------------------------------------------------------------------------
+
+	DescribeTable(
+		"single-key legacy path",
+		func(app *application) {
+			crypter, err := app.createCrypter(ctx)
+			Expect(err).To(BeNil())
+			Expect(crypter).NotTo(BeNil())
+
+			// End-to-end round-trip via secret.NewStore.
+			db, err := memorykv.OpenMemory(ctx)
+			Expect(err).To(BeNil())
+			store := secret.NewStore(db, crypter)
+			err = store.Upsert(ctx, secret.Key("testkey"), secret.Secret{Password: "pw"})
+			Expect(err).To(BeNil())
+			sec, err := store.Get(ctx, secret.Key("testkey"))
+			Expect(err).To(BeNil())
+			Expect(sec.Password).To(Equal("pw"))
+		},
+		Entry(
+			"32-byte key",
+			&application{EncryptionKey: base64.StdEncoding.EncodeToString(testEncryptionKey)},
+		),
+		Entry(
+			"16-byte key",
+			&application{
+				EncryptionKey: base64.StdEncoding.EncodeToString([]byte("0123456789012345")),
+			},
+		),
+	)
+
+	// -------------------------------------------------------------------------
+	// Ordered multi-key config parses, primary first (AC 7)
+	// -------------------------------------------------------------------------
+
+	It("multi-key config: encrypt with primary, decrypt with primary-only ring", func() {
+		key1 := crypto.SecretKey("11111111111111111111111111111111"[:32])
+		key2 := crypto.SecretKey("22222222222222222222222222222222"[:32])
+
+		app := &application{
+			EncryptionKeys: base64.StdEncoding.EncodeToString(
+				key1,
+			) + "," + base64.StdEncoding.EncodeToString(
+				key2,
+			),
+		}
+		crypter, err := app.createCrypter(ctx)
+		Expect(err).To(BeNil())
+		Expect(crypter).NotTo(BeNil())
+
+		// Encrypt a value.
+		plaintext := []byte("topsecret")
+		ciphertext, err := crypter.Encrypt(ctx, plaintext)
+		Expect(err).To(BeNil())
+
+		// Build a primary-only keyring and decrypt.
+		ring, err := keyring.New(ctx, key1)
+		Expect(err).To(BeNil())
+		decrypted, err := ring.Decrypt(ctx, ciphertext)
+		Expect(err).To(BeNil())
+		Expect(decrypted).To(Equal(plaintext))
+	})
+
+	// -------------------------------------------------------------------------
+	// Invalid or absent key material refuses start (AC 8)
+	// -------------------------------------------------------------------------
+
+	DescribeTable(
+		"createCrypter refuses invalid config",
+		func(app *application) {
+			crypter, err := app.createCrypter(ctx)
+			Expect(err).NotTo(BeNil())
+			Expect(crypter).To(BeNil())
+		},
+		Entry("neither env var set", &application{}),
+		Entry("both env vars set", &application{
+			EncryptionKey:  base64.StdEncoding.EncodeToString(testEncryptionKey),
+			EncryptionKeys: base64.StdEncoding.EncodeToString(testEncryptionKey),
+		}),
+		Entry("empty EncryptionKeys (comma-only)", &application{EncryptionKeys: ","}),
+		Entry("empty EncryptionKeys (whitespace only)", &application{EncryptionKeys: "  ,  ,  "}),
+		Entry("list entry not valid base64", &application{EncryptionKeys: "!!!"}),
+		Entry(
+			"list entry wrong length",
+			&application{EncryptionKeys: base64.StdEncoding.EncodeToString([]byte("short"))},
+		),
+		Entry("duplicate keys in list", &application{
+			EncryptionKeys: base64.StdEncoding.EncodeToString(
+				testEncryptionKey,
+			) + "," + base64.StdEncoding.EncodeToString(
+				testEncryptionKey,
+			),
+		}),
+	)
 })
