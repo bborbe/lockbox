@@ -9,6 +9,19 @@ import (
 )
 
 type SecretStore struct {
+	CreateStub        func(context.Context, secret.Key, secret.Secret) error
+	createMutex       sync.RWMutex
+	createArgsForCall []struct {
+		arg1 context.Context
+		arg2 secret.Key
+		arg3 secret.Secret
+	}
+	createReturns struct {
+		result1 error
+	}
+	createReturnsOnCall map[int]struct {
+		result1 error
+	}
 	GetStub        func(context.Context, secret.Key) (*secret.Secret, error)
 	getMutex       sync.RWMutex
 	getArgsForCall []struct {
@@ -52,6 +65,69 @@ type SecretStore struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *SecretStore) Create(arg1 context.Context, arg2 secret.Key, arg3 secret.Secret) error {
+	fake.createMutex.Lock()
+	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
+	fake.createArgsForCall = append(fake.createArgsForCall, struct {
+		arg1 context.Context
+		arg2 secret.Key
+		arg3 secret.Secret
+	}{arg1, arg2, arg3})
+	stub := fake.CreateStub
+	fakeReturns := fake.createReturns
+	fake.recordInvocation("Create", []interface{}{arg1, arg2, arg3})
+	fake.createMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *SecretStore) CreateCallCount() int {
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	return len(fake.createArgsForCall)
+}
+
+func (fake *SecretStore) CreateCalls(stub func(context.Context, secret.Key, secret.Secret) error) {
+	fake.createMutex.Lock()
+	defer fake.createMutex.Unlock()
+	fake.CreateStub = stub
+}
+
+func (fake *SecretStore) CreateArgsForCall(i int) (context.Context, secret.Key, secret.Secret) {
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	argsForCall := fake.createArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *SecretStore) CreateReturns(result1 error) {
+	fake.createMutex.Lock()
+	defer fake.createMutex.Unlock()
+	fake.CreateStub = nil
+	fake.createReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *SecretStore) CreateReturnsOnCall(i int, result1 error) {
+	fake.createMutex.Lock()
+	defer fake.createMutex.Unlock()
+	fake.CreateStub = nil
+	if fake.createReturnsOnCall == nil {
+		fake.createReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.createReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *SecretStore) Get(arg1 context.Context, arg2 secret.Key) (*secret.Secret, error) {

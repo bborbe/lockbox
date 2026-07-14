@@ -1,6 +1,8 @@
 ---
-status: approved
+status: prompted
 approved: "2026-07-14T13:34:47Z"
+generating: "2026-07-14T13:51:35Z"
+prompted: "2026-07-14T14:06:03Z"
 branch: dark-factory/write-api-teamvault-compat
 ---
 

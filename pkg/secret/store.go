@@ -7,12 +7,16 @@ package secret
 import (
 	"context"
 	"encoding/json"
+	stderrors "errors"
 	"strings"
 
 	"github.com/bborbe/crypto"
 	"github.com/bborbe/errors"
 	libkv "github.com/bborbe/kv"
 )
+
+// ErrKeyExists is returned by Create when the target key is already present.
+var ErrKeyExists = stderrors.New("key already exists")
 
 // bucketName is the kv bucket Lockbox stores secrets in.
 var bucketName = libkv.NewBucketName("secrets")
@@ -23,6 +27,14 @@ var bucketName = libkv.NewBucketName("secrets")
 type Store interface {
 	// Upsert creates or replaces the secret stored under key.
 	Upsert(ctx context.Context, key Key, secret Secret) error
+	// Create stores secret under key only if key does not already exist.
+	// If key is already present it returns ErrKeyExists and does not modify
+	// the stored secret.
+	//
+	// Create is check-and-set at the store level; collision at Lockbox scale
+	// is astronomically unlikely. Callers should regenerate the key and retry
+	// on ErrKeyExists.
+	Create(ctx context.Context, key Key, secret Secret) error
 	// Get returns the secret stored under key, or an error if absent.
 	Get(ctx context.Context, key Key) (*Secret, error)
 	// Search returns the keys whose key or username contains query
@@ -62,6 +74,30 @@ func (s *store) Upsert(ctx context.Context, key Key, secret Secret) error {
 	}
 	if err := s.kv.Add(ctx, key, encrypted); err != nil {
 		return errors.Wrapf(ctx, err, "upsert secret %s failed", key)
+	}
+	return nil
+}
+
+func (s *store) Create(ctx context.Context, key Key, secret Secret) error {
+	exists, err := s.kv.Exists(ctx, key)
+	if err != nil {
+		return errors.Wrapf(ctx, err, "create secret %s failed", key)
+	}
+	if exists {
+		return errors.Wrapf(ctx, ErrKeyExists, "create secret %s failed", key)
+	}
+	data, err := json.Marshal(
+		secret,
+	) // #nosec G117 -- marshalled only to be immediately encrypted below
+	if err != nil {
+		return errors.Wrapf(ctx, err, "marshal secret %s failed", key)
+	}
+	encrypted, err := s.crypter.Encrypt(ctx, data)
+	if err != nil {
+		return errors.Wrapf(ctx, err, "encrypt secret %s failed", key)
+	}
+	if err := s.kv.Add(ctx, key, encrypted); err != nil {
+		return errors.Wrapf(ctx, err, "create secret %s failed", key)
 	}
 	return nil
 }

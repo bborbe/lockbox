@@ -6,6 +6,7 @@ package secret_test
 
 import (
 	"context"
+	stderrors "errors"
 	"strings"
 
 	"github.com/bborbe/crypto"
@@ -136,5 +137,48 @@ var _ = Describe("Store", func() {
 			Expect(raw).NotTo(BeNil())
 			Expect(strings.Contains(string(*raw), password)).To(BeFalse())
 		})
+	})
+
+	Describe("Create", func() {
+		It(
+			"stores a new secret and Get returns the exact Secret including Name, Description, and ContentType",
+			func() {
+				value := secret.Secret{
+					Username:    "alice",
+					URL:         "https://example.com",
+					Password:    "s3cr3t",
+					File:        "ZmlsZQ==",
+					Name:        "My Secret",
+					Description: "A test secret",
+					ContentType: secret.ContentTypePassword,
+				}
+				err := store.Create(ctx, secret.Key("NewKey"), value)
+				Expect(err).To(BeNil())
+
+				found, err := store.Get(ctx, secret.Key("NewKey"))
+				Expect(err).To(BeNil())
+				Expect(found).NotTo(BeNil())
+				Expect(*found).To(Equal(value))
+			},
+		)
+
+		It(
+			"returns ErrKeyExists when the key already exists and does not modify the stored secret",
+			func() {
+				first := secret.Secret{Username: "alice", Name: "First"}
+				Expect(store.Create(ctx, secret.Key("DupKey"), first)).To(BeNil())
+
+				second := secret.Secret{Username: "bob", Name: "Second"}
+				err := store.Create(ctx, secret.Key("DupKey"), second)
+				Expect(err).NotTo(BeNil())
+				Expect(stderrors.Is(err, secret.ErrKeyExists)).To(BeTrue())
+
+				// Stored value is unchanged (first secret)
+				found, err := store.Get(ctx, secret.Key("DupKey"))
+				Expect(err).To(BeNil())
+				Expect(found.Username).To(Equal("alice"))
+				Expect(found.Name).To(Equal("First"))
+			},
+		)
 	})
 })

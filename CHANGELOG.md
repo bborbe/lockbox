@@ -8,6 +8,12 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
+## Unreleased
+
+- feat: expand `Secret` domain record with `Name`, `Description`, `ContentType` fields and add `ContentTypePassword`/`ContentTypeFile` constants for TeamVault write-API compatibility
+- feat: add server-side `KeyGenerator` interface with `NewKeyGenerator` constructor producing URL-safe base62 keys of fixed 8-character length via `crypto/rand`
+- feat: add check-and-set `Create` method to `Store` interface that returns `ErrKeyExists` if key already exists; used by create handler to enforce uniqueness
+
 ## v0.3.1
 
 - Make `SENTRY_DSN` optional — an empty value disables Sentry; the server no longer refuses to start without it (verified: starts with empty DSN, `/healthz` returns 200)
