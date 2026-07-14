@@ -11,6 +11,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 - feat: add `pkg/keyring` package with `Keyring` type satisfying `crypto.Crypter`; encrypts under primary key with a content-derived SHA-256/4 key-id frame, decrypts by id with authenticated try-each fallback, and reads pre-keyring (un-framed) ciphertext unchanged
+- feat: add `LOCKBOX_ENCRYPTION_KEYS` config (comma-separated base64 keys, primary first) alongside existing `LOCKBOX_ENCRYPTION_KEY`; exactly one must be set; the resulting keyring is wired into the secret store via `createCrypter` with full round-trip testing
 
 ## v0.5.0
 

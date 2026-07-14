@@ -1,8 +1,13 @@
 ---
-status: approved
+status: completed
 spec: [002-keyring-key-rotation]
+summary: Extended createCrypter to build a keyring from LOCKBOX_ENCRYPTION_KEYS (comma-separated base64, primary first) or the legacy LOCKBOX_ENCRYPTION_KEY, enforcing exactly-one-source and refusing invalid key material; added comprehensive table-driven tests for all valid/invalid cases.
+execution_id: lockbox-exec-009-spec-002-config-keyring
+dark-factory-version: dev
 created: "2026-07-14T19:50:07Z"
 queued: "2026-07-14T20:02:53Z"
+started: "2026-07-14T20:15:20Z"
+completed: "2026-07-14T20:17:39Z"
 branch: dark-factory/keyring-key-rotation
 ---
 
