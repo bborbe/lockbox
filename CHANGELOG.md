@@ -8,6 +8,11 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
+## Unreleased
+
+- Add `cmd/migrate-teamvault`: one-shot API-to-API importer that reads all secrets from a running TeamVault instance (following DRF `next` pagination) and PUTs them into a running Lockbox instance
+- Add `pkg/migrate`: `TeamVaultClient`, `LockboxClient` and `Migrator` — skips credit-card secrets and secrets whose data isn't readable, logs and continues past per-secret fetch/write failures, and returns a `Report` with migrated/skipped/failed counts
+
 ## v0.1.0
 
 - Add TeamVault-compatible read API: `GET /api/secrets/{key}/`, `GET /api/secret-revisions/{key}/data`, `GET /api/secrets/?search=`
