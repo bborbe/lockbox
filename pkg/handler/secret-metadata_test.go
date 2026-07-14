@@ -52,7 +52,7 @@ var _ = Describe("SecretMetadataHandler", func() {
 		Expect(body.URL).To(Equal("https://example.com"))
 		Expect(
 			body.CurrentRevision,
-		).To(Equal("http://example.com/api/secret-revisions/AbC123/data"))
+		).To(Equal("http://example.com/api/secret-revisions/AbC123/"))
 
 		Expect(store.GetCallCount()).To(Equal(1))
 		_, key := store.GetArgsForCall(0)

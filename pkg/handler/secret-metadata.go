@@ -17,8 +17,11 @@ import (
 )
 
 // NewSecretMetadataHandler serves GET /api/secrets/{key}/ — the secret metadata
-// (username, url) plus an absolute current_revision URL pointing at the
-// revision-data endpoint on the same API prefix.
+// (username, url) plus an absolute current_revision URL pointing at the secret's
+// revision endpoint on the same API prefix. Per the TeamVault contract the URL
+// ends at ".../secret-revisions/{key}/" (trailing slash, no "data" suffix): the
+// client appends "data" to it to fetch the revision payload, so emitting the
+// "/data" endpoint here would make the client request ".../datadata".
 func NewSecretMetadataHandler(store secret.Store) libhttp.WithError {
 	return libhttp.NewJSONHandler(libhttp.JSONHandlerFunc(
 		func(ctx context.Context, req *http.Request) (any, error) {
@@ -28,7 +31,7 @@ func NewSecretMetadataHandler(store secret.Store) libhttp.WithError {
 				return nil, errors.Wrapf(ctx, err, "get secret %s failed", key)
 			}
 			prefix := apiPrefix(req, "secrets/"+key.String()+"/")
-			revision := absoluteURL(req, prefix+"secret-revisions/"+key.String()+"/data")
+			revision := absoluteURL(req, prefix+"secret-revisions/"+key.String()+"/")
 			return api.SecretMetadata{
 				Username:        found.Username,
 				URL:             found.URL,

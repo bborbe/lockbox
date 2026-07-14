@@ -176,7 +176,13 @@ var _ = Describe("TeamVault contract", func() {
 					// GET revision-data — body must be exactly {password, file}
 					revisionURLRaw, ok := metadata["current_revision"].(string)
 					Expect(ok).To(BeTrue(), "current_revision should be a string")
-					revisionResp := doJSON(router, http.MethodGet, revisionURLRaw, true, nil)
+					// TeamVault contract: current_revision ends at the revision base
+					// ".../{key}/"; the client appends "data" to fetch the payload.
+					// (Fetching current_revision directly would hide a "/data"-suffix bug.)
+					Expect(
+						revisionURLRaw,
+					).To(HaveSuffix("/secret-revisions/" + postResult.Hashid + "/"))
+					revisionResp := doJSON(router, http.MethodGet, revisionURLRaw+"data", true, nil)
 					Expect(revisionResp.Code).To(Equal(http.StatusOK))
 
 					var revisionData map[string]any
