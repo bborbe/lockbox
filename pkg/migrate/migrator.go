@@ -98,6 +98,7 @@ func (m *migrator) migrateOne(ctx context.Context, secret TeamVaultSecret) error
 		Name:        secret.Name,
 		Username:    secret.Username,
 		URL:         secret.URL,
+		Description: secret.Description,
 		SecretData:  &api.SecretData{},
 	}
 	switch secret.ContentType {

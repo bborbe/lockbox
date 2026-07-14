@@ -83,6 +83,7 @@ var _ = Describe("Migrator", func() {
 						"current_revision": teamVaultURL + "/api/secret-revisions/rev-pw/",
 						"data_readable":    true,
 						"name":             "password secret",
+						"description":      "prod database root",
 						"status":           "ok",
 					},
 					{
@@ -227,6 +228,7 @@ var _ = Describe("Migrator", func() {
 		Expect(req.ContentType).To(Equal("password"))
 		Expect(req.Username).To(Equal("pwuser"))
 		Expect(req.URL).To(Equal("https://password.example.com"))
+		Expect(req.Description).To(Equal("prod database root"))
 		Expect(req.SecretData).NotTo(BeNil())
 		Expect(req.SecretData.Password).To(Equal("s3cr3t"))
 		Expect(req.SecretData.FileContent).To(Equal(""))
