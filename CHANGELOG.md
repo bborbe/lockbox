@@ -8,7 +8,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
-## Unreleased
+## v0.6.2
 
 - fix: `current_revision` in GET /api/secrets/{key}/ now ends at the revision base (`.../secret-revisions/{key}/`, no `/data` suffix) — matches the TeamVault contract where the client appends `data`; previously a real client requested `.../datadata` (404) and could not read passwords/files. The contract test now follows `current_revision` (append `data`) instead of fetching it directly, so the format is enforced.
 
