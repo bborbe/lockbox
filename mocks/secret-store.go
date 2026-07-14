@@ -36,6 +36,17 @@ type SecretStore struct {
 		result1 *secret.Secret
 		result2 error
 	}
+	ReEncryptStub        func(context.Context) error
+	reEncryptMutex       sync.RWMutex
+	reEncryptArgsForCall []struct {
+		arg1 context.Context
+	}
+	reEncryptReturns struct {
+		result1 error
+	}
+	reEncryptReturnsOnCall map[int]struct {
+		result1 error
+	}
 	SearchStub        func(context.Context, string) (secret.Keys, error)
 	searchMutex       sync.RWMutex
 	searchArgsForCall []struct {
@@ -193,6 +204,67 @@ func (fake *SecretStore) GetReturnsOnCall(i int, result1 *secret.Secret, result2
 		result1 *secret.Secret
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *SecretStore) ReEncrypt(arg1 context.Context) error {
+	fake.reEncryptMutex.Lock()
+	ret, specificReturn := fake.reEncryptReturnsOnCall[len(fake.reEncryptArgsForCall)]
+	fake.reEncryptArgsForCall = append(fake.reEncryptArgsForCall, struct {
+		arg1 context.Context
+	}{arg1})
+	stub := fake.ReEncryptStub
+	fakeReturns := fake.reEncryptReturns
+	fake.recordInvocation("ReEncrypt", []interface{}{arg1})
+	fake.reEncryptMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *SecretStore) ReEncryptCallCount() int {
+	fake.reEncryptMutex.RLock()
+	defer fake.reEncryptMutex.RUnlock()
+	return len(fake.reEncryptArgsForCall)
+}
+
+func (fake *SecretStore) ReEncryptCalls(stub func(context.Context) error) {
+	fake.reEncryptMutex.Lock()
+	defer fake.reEncryptMutex.Unlock()
+	fake.ReEncryptStub = stub
+}
+
+func (fake *SecretStore) ReEncryptArgsForCall(i int) context.Context {
+	fake.reEncryptMutex.RLock()
+	defer fake.reEncryptMutex.RUnlock()
+	argsForCall := fake.reEncryptArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *SecretStore) ReEncryptReturns(result1 error) {
+	fake.reEncryptMutex.Lock()
+	defer fake.reEncryptMutex.Unlock()
+	fake.ReEncryptStub = nil
+	fake.reEncryptReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *SecretStore) ReEncryptReturnsOnCall(i int, result1 error) {
+	fake.reEncryptMutex.Lock()
+	defer fake.reEncryptMutex.Unlock()
+	fake.ReEncryptStub = nil
+	if fake.reEncryptReturnsOnCall == nil {
+		fake.reEncryptReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.reEncryptReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *SecretStore) Search(arg1 context.Context, arg2 string) (secret.Keys, error) {

@@ -8,7 +8,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	stderrors "errors"
+	"strings"
 
 	"github.com/bborbe/crypto"
 	"github.com/bborbe/errors"
@@ -44,6 +46,79 @@ const GcmMinLen = 12
 // secret sealed under any configured key (or a pre-keyring un-framed blob).
 type Keyring interface {
 	crypto.Crypter
+}
+
+// Parse builds a Keyring from the two mutually-exclusive key configuration
+// sources: single (LOCKBOX_ENCRYPTION_KEY, one base64 key) and list
+// (LOCKBOX_ENCRYPTION_KEYS, comma-separated base64 keys, primary first).
+// Exactly one of single/list must be non-empty; every key must base64-decode
+// to 16 or 32 bytes and be distinct, or Parse returns a wrapped error.
+// Duplicate detection and empty-ring rejection are delegated to New.
+func Parse(ctx context.Context, single string, list string) (Keyring, error) {
+	single = strings.TrimSpace(single)
+	list = strings.TrimSpace(list)
+
+	// Exactly-one rule.
+	if single == "" && list == "" {
+		return nil, errors.New(
+			ctx,
+			"either LOCKBOX_ENCRYPTION_KEY or LOCKBOX_ENCRYPTION_KEYS must be set",
+		)
+	}
+	if single != "" && list != "" {
+		return nil, errors.New(
+			ctx,
+			"LOCKBOX_ENCRYPTION_KEY and LOCKBOX_ENCRYPTION_KEYS are mutually exclusive; set exactly one",
+		)
+	}
+
+	// Collect base64 entries.
+	var entries []string
+	if list != "" {
+		parts := strings.Split(list, ",")
+		for _, p := range parts {
+			entries = append(entries, strings.TrimSpace(p))
+		}
+	} else {
+		entries = []string{single}
+	}
+
+	// Reject empty/whitespace entries.
+	for i, e := range entries {
+		if e == "" {
+			return nil, errors.Errorf(ctx, "LOCKBOX_ENCRYPTION_KEYS entry %d is empty", i)
+		}
+	}
+
+	// Decode and validate each key.
+	keys := make([]crypto.SecretKey, 0, len(entries))
+	for i, entry := range entries {
+		raw, err := base64.StdEncoding.DecodeString(entry)
+		if err != nil {
+			return nil, errors.Wrapf(
+				ctx,
+				err,
+				"LOCKBOX_ENCRYPTION_KEYS entry %d: base64 decode failed",
+				i,
+			)
+		}
+		if len(raw) != 16 && len(raw) != 32 {
+			return nil, errors.Errorf(
+				ctx,
+				"LOCKBOX_ENCRYPTION_KEYS entry %d: must decode to 16 or 32 bytes, got %d",
+				i,
+				len(raw),
+			)
+		}
+		keys = append(keys, crypto.SecretKey(raw))
+	}
+
+	// Build keyring (it rejects duplicates and empty input).
+	ring, err := New(ctx, keys...)
+	if err != nil {
+		return nil, errors.Wrap(ctx, err, "build keyring failed")
+	}
+	return ring, nil
 }
 
 // New returns a Keyring holding the given keys in the order provided. The

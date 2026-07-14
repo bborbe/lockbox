@@ -12,6 +12,11 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 
 - feat: add `pkg/keyring` package with `Keyring` type satisfying `crypto.Crypter`; encrypts under primary key with a content-derived SHA-256/4 key-id frame, decrypts by id with authenticated try-each fallback, and reads pre-keyring (un-framed) ciphertext unchanged
 - feat: add `LOCKBOX_ENCRYPTION_KEYS` config (comma-separated base64 keys, primary first) alongside existing `LOCKBOX_ENCRYPTION_KEY`; exactly one must be set; the resulting keyring is wired into the secret store via `createCrypter` with full round-trip testing
+- feat: add `secret.Store.ReEncrypt` method that rewrites every stored secret under the current primary key; idempotent and crash-safe; enables safe key rotation
+- feat: add `cmd/reencrypt` one-shot command that re-encrypts all secrets under the current primary key from the same data directory and key env vars as the server
+- refactor: extract `keyring.Parse` as the shared single source of truth for the exactly-one key env-var parsing rule used by both the server and the re-encrypt command
+- test: add `pkg/secret/reencrypt_test.go` integration tests covering full primary-key conversion, idempotent re-runs, and legacy un-framed blob sweeping
+- test: add `Describe("Parse", ...)` unit tests in `pkg/keyring/keyring_test.go` covering AC-6/7/8 cases
 
 ## v0.5.0
 

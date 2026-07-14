@@ -6,6 +6,7 @@ package keyring_test
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/bborbe/crypto"
 	. "github.com/onsi/ginkgo/v2"
@@ -283,6 +284,85 @@ var _ = Describe("Keyring", func() {
 			kr, err := keyring.New(ctx, testKey32A, testKey32B)
 			Expect(err).To(BeNil())
 			Expect(kr).NotTo(BeNil())
+		})
+	})
+
+	Describe("Parse", func() {
+		// -------------------------------------------------------------------------
+		// AC 8: Invalid config refuses start
+		// -------------------------------------------------------------------------
+		DescribeTable("rejects invalid config",
+			func(single string, list string) {
+				kr, err := keyring.Parse(ctx, single, list)
+				Expect(err).NotTo(BeNil())
+				Expect(kr).To(BeNil())
+			},
+			Entry("neither env var set", "", ""),
+			Entry("both env vars set",
+				base64.StdEncoding.EncodeToString(testKey32A),
+				base64.StdEncoding.EncodeToString(testKey32A),
+			),
+			Entry("empty list (comma-only)", "", ","),
+			Entry("empty list (whitespace only)", "", "  ,  ,  "),
+			Entry("list entry not valid base64", "", "!!!"),
+			Entry("list entry wrong length", "",
+				base64.StdEncoding.EncodeToString([]byte("short")),
+			),
+			Entry("duplicate keys in list", "",
+				base64.StdEncoding.EncodeToString(testKey32A)+","+
+					base64.StdEncoding.EncodeToString(testKey32A),
+			),
+		)
+
+		// -------------------------------------------------------------------------
+		// AC 6: Single key boots
+		// -------------------------------------------------------------------------
+		Describe("single-key legacy path", func() {
+			DescribeTable("accepts a single base64-encoded key",
+				func(encoded string) {
+					kr, err := keyring.Parse(ctx, encoded, "")
+					Expect(err).To(BeNil())
+					Expect(kr).NotTo(BeNil())
+
+					// Round-trip.
+					plaintext := []byte("single-key-test")
+					ciphertext, err := kr.Encrypt(ctx, plaintext)
+					Expect(err).To(BeNil())
+					result, err := kr.Decrypt(ctx, ciphertext)
+					Expect(err).To(BeNil())
+					Expect(result).To(Equal(plaintext))
+				},
+				Entry("32-byte key",
+					base64.StdEncoding.EncodeToString(testKey32A),
+				),
+				Entry("16-byte key",
+					base64.StdEncoding.EncodeToString(testKey16),
+				),
+			)
+		})
+
+		// -------------------------------------------------------------------------
+		// AC 7: Ordered multi-key config parses, primary first
+		// -------------------------------------------------------------------------
+		It("encrypts with the first key as primary", func() {
+			encodedPrimary := base64.StdEncoding.EncodeToString(testKey32A)
+			encodedSecondary := base64.StdEncoding.EncodeToString(testKey32B)
+
+			kr, err := keyring.Parse(ctx, "", encodedPrimary+","+encodedSecondary)
+			Expect(err).To(BeNil())
+			Expect(kr).NotTo(BeNil())
+
+			// Encrypt.
+			plaintext := []byte("primary-first-test")
+			ciphertext, err := kr.Encrypt(ctx, plaintext)
+			Expect(err).To(BeNil())
+
+			// Decrypt with a ring of only the primary key.
+			primaryOnly, err := keyring.New(ctx, testKey32A)
+			Expect(err).To(BeNil())
+			result, err := primaryOnly.Decrypt(ctx, ciphertext)
+			Expect(err).To(BeNil())
+			Expect(result).To(Equal(plaintext))
 		})
 	})
 })

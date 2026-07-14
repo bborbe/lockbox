@@ -6,10 +6,8 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	libboltkv "github.com/bborbe/boltkv"
@@ -78,70 +76,7 @@ func (a *application) Run(ctx context.Context, sentryClient libsentry.Client) er
 // is set, both are set, or any key material is invalid (bad base64, wrong byte
 // length, or duplicate keys).
 func (a *application) createCrypter(ctx context.Context) (crypto.Crypter, error) {
-	single := strings.TrimSpace(a.EncryptionKey)
-	list := strings.TrimSpace(a.EncryptionKeys)
-
-	// Exactly-one rule.
-	if single == "" && list == "" {
-		return nil, errors.New(
-			ctx,
-			"either LOCKBOX_ENCRYPTION_KEY or LOCKBOX_ENCRYPTION_KEYS must be set",
-		)
-	}
-	if single != "" && list != "" {
-		return nil, errors.New(
-			ctx,
-			"LOCKBOX_ENCRYPTION_KEY and LOCKBOX_ENCRYPTION_KEYS are mutually exclusive; set exactly one",
-		)
-	}
-
-	// Collect base64 entries.
-	var entries []string
-	if list != "" {
-		parts := strings.Split(list, ",")
-		for _, p := range parts {
-			entries = append(entries, strings.TrimSpace(p))
-		}
-	} else {
-		entries = []string{single}
-	}
-
-	// Reject empty/whitespace entries.
-	for i, e := range entries {
-		if e == "" {
-			return nil, errors.Errorf(ctx, "LOCKBOX_ENCRYPTION_KEYS entry %d is empty", i)
-		}
-	}
-
-	// Decode and validate each key.
-	keys := make([]crypto.SecretKey, 0, len(entries))
-	for i, entry := range entries {
-		raw, err := base64.StdEncoding.DecodeString(entry)
-		if err != nil {
-			return nil, errors.Wrapf(
-				ctx,
-				err,
-				"LOCKBOX_ENCRYPTION_KEYS entry %d: base64 decode failed",
-				i,
-			)
-		}
-		if len(raw) != 16 && len(raw) != 32 {
-			return nil, errors.Errorf(
-				ctx,
-				"LOCKBOX_ENCRYPTION_KEYS entry %d: must decode to 16 or 32 bytes, got %d",
-				i,
-				len(raw),
-			)
-		}
-		keys = append(keys, crypto.SecretKey(raw))
-	}
-
-	// Build keyring (it rejects duplicates and empty input).
-	ring, err := keyring.New(ctx, keys...)
-	if err != nil {
-		return nil, errors.Wrap(ctx, err, "build keyring failed")
-	}
-	return ring, nil
+	return keyring.Parse(ctx, a.EncryptionKey, a.EncryptionKeys)
 }
 
 func (a *application) createHTTPServer(

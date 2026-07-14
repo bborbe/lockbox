@@ -40,6 +40,15 @@ type Store interface {
 	// Search returns the keys whose key or username contains query
 	// (case-insensitive). An empty query matches every secret.
 	Search(ctx context.Context, query string) (Keys, error)
+	// ReEncrypt rewrites every stored secret sealed under the current primary
+	// key. It reads each secret through the configured crypter and Upserts it
+	// back, so any secret still sealed under a non-primary (or pre-keyring) key
+	// is re-sealed under the primary. It is idempotent (re-encrypting an
+	// already-primary secret is harmless) and crash-safe (each secret is a
+	// single-key overwrite; an interrupted run leaves the prior ciphertext
+	// intact and still decryptable under the still-present keys; re-running
+	// completes the conversion).
+	ReEncrypt(ctx context.Context) error
 }
 
 // Keys is a list of secret keys.
@@ -136,6 +145,28 @@ func (s *store) Search(ctx context.Context, query string) (Keys, error) {
 		return nil, errors.Wrapf(ctx, err, "search secrets for %q failed", query)
 	}
 	return result, nil
+}
+
+func (s *store) ReEncrypt(ctx context.Context) error {
+	keys, err := s.Search(ctx, "")
+	if err != nil {
+		return errors.Wrapf(ctx, err, "re-encrypt: list secrets failed")
+	}
+	for _, key := range keys {
+		select {
+		case <-ctx.Done():
+			return errors.Wrapf(ctx, ctx.Err(), "re-encrypt cancelled")
+		default:
+		}
+		sec, err := s.Get(ctx, key)
+		if err != nil {
+			return errors.Wrapf(ctx, err, "re-encrypt: read secret %s failed", key)
+		}
+		if err := s.Upsert(ctx, key, *sec); err != nil {
+			return errors.Wrapf(ctx, err, "re-encrypt: rewrite secret %s failed", key)
+		}
+	}
+	return nil
 }
 
 // decrypt decrypts and unmarshals a stored ciphertext into a Secret.

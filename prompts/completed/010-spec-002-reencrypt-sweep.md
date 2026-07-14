@@ -1,8 +1,13 @@
 ---
-status: approved
+status: completed
 spec: [002-keyring-key-rotation]
+summary: Added ReEncrypt sweep method to secret.Store, shared keyring.Parse parser, and cmd/reencrypt one-shot command with full integration test coverage
+execution_id: lockbox-exec-010-spec-002-reencrypt-sweep
+dark-factory-version: dev
 created: "2026-07-14T19:50:07Z"
 queued: "2026-07-14T20:02:53Z"
+started: "2026-07-14T20:17:40Z"
+completed: "2026-07-14T20:23:04Z"
 branch: dark-factory/keyring-key-rotation
 ---
 
