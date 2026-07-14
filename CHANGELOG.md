@@ -10,6 +10,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+- docs: Document POST /api/secrets/ and PATCH /api/secrets/{hashid}/ in the README API table
 - feat: Replace flat PUT upsert with TeamVault-compatible write API: POST /api/secrets/ (create, server-generated hashid) and PATCH /api/secrets/{hashid}/ (update), on both /api and /api/v1
 - refactor: Switch migrate-teamvault importer from the flat PUT to POST /api/secrets/; remove UpsertRequest/UpsertResult DTOs and the flat-PUT handler
 - feat: add `POST /api/secrets/` (and `/api/v1/secrets/`) handler `NewSecretCreateHandler` that decodes a TeamVault create body, validates it, generates a fresh unique key, stores the secret encrypted via check-and-set, and responds HTTP 201 with a TeamVault-shaped representation containing the new hashid and api_url

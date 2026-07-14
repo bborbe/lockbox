@@ -1,8 +1,13 @@
 ---
-status: approved
+status: completed
 spec: [001-write-api-teamvault-compat]
+summary: Added Ginkgo contract tests for POST/PATCH write API to main_test.go, documented endpoints in README.md, and appended docs bullet to CHANGELOG.md
+execution_id: lockbox-exec-006-spec-001-contract-tests-and-docs
+dark-factory-version: dev
 created: "2026-07-14T16:05:00Z"
 queued: "2026-07-14T14:10:42Z"
+started: "2026-07-14T14:31:59Z"
+completed: "2026-07-14T14:35:14Z"
 branch: dark-factory/write-api-teamvault-compat
 ---
 
