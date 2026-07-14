@@ -59,6 +59,14 @@ make test
 make run
 ```
 
+## End-to-end tests
+
+`make e2e` runs hermetic scenarios (`scenarios/001-core-api-e2e.md`,
+`scenarios/002-keyring-rotation-e2e.md`) that build the real `lockbox` and
+`cmd/reencrypt` binaries and drive them against a temp data dir over HTTP —
+full TeamVault-compatible API coverage plus a live keyring-rotation +
+reencrypt-sweep flow. No live TeamVault, no network.
+
 ## Deploy
 
 ```bash
