@@ -5,6 +5,10 @@ include example.env
 
 SERVICE = bborbe/lockbox
 
+.PHONY: e2e
+e2e:
+	bash scripts/e2e.sh
+
 run:
 	@go run -mod=mod main.go \
 	-sentry-dsn="$(shell teamvault-url --teamvault-config ~/.teamvault.json --teamvault-key=${SENTRY_DSN_KEY})" \
