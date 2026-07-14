@@ -1,8 +1,13 @@
 ---
-status: approved
+status: completed
 spec: [001-write-api-teamvault-compat]
+summary: Added TeamVault write-API DTOs (CreateSecretRequest, SecretData, SecretRepresentation) and pure Validate/ApplyUpdate validation functions in pkg/api/write.go with 91.7% coverage
+execution_id: lockbox-exec-002-spec-001-write-dtos-and-validation
+dark-factory-version: dev
 created: "2026-07-14T16:01:00Z"
 queued: "2026-07-14T14:10:42Z"
+started: "2026-07-14T14:15:57Z"
+completed: "2026-07-14T14:18:32Z"
 branch: dark-factory/write-api-teamvault-compat
 ---
 

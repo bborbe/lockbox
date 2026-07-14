@@ -13,6 +13,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 - feat: expand `Secret` domain record with `Name`, `Description`, `ContentType` fields and add `ContentTypePassword`/`ContentTypeFile` constants for TeamVault write-API compatibility
 - feat: add server-side `KeyGenerator` interface with `NewKeyGenerator` constructor producing URL-safe base62 keys of fixed 8-character length via `crypto/rand`
 - feat: add check-and-set `Create` method to `Store` interface that returns `ErrKeyExists` if key already exists; used by create handler to enforce uniqueness
+- feat: add TeamVault write-API DTOs (`CreateSecretRequest`, `SecretData`, `SecretRepresentation`) and a pure `Validate`/`ApplyUpdate` pair that maps a decoded create/update body into a `secret.Secret`, returning HTTP 400 for malformed input
 
 ## v0.3.1
 
