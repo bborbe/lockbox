@@ -7,11 +7,13 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/bborbe/crypto"
 	"github.com/bborbe/memorykv"
 	"github.com/gorilla/mux"
 	. "github.com/onsi/ginkgo/v2"
@@ -21,6 +23,9 @@ import (
 	"github.com/bborbe/lockbox/pkg/api"
 	"github.com/bborbe/lockbox/pkg/secret"
 )
+
+// testEncryptionKey is a fixed 32-byte AES-256 key used only in tests.
+var testEncryptionKey = crypto.SecretKey("01234567890123456789012345678901"[:32])
 
 func TestContractSuite(t *testing.T) {
 	format.TruncatedDiff = false
@@ -35,7 +40,7 @@ func TestContractSuite(t *testing.T) {
 func newContractRouter(username, password string) *mux.Router {
 	db, err := memorykv.OpenMemory(context.Background())
 	Expect(err).To(BeNil())
-	store := secret.NewStore(db)
+	store := secret.NewStore(db, crypto.NewCrypter(testEncryptionKey))
 
 	app := &application{
 		BasicAuthUsername: username,
@@ -160,4 +165,42 @@ var _ = Describe("TeamVault contract", func() {
 			})
 		})
 	}
+})
+
+var _ = Describe("createCrypter", func() {
+	var ctx context.Context
+
+	BeforeEach(func() {
+		ctx = context.Background()
+	})
+
+	It("accepts a base64-encoded 32-byte key", func() {
+		app := &application{EncryptionKey: base64.StdEncoding.EncodeToString(testEncryptionKey)}
+		crypter, err := app.createCrypter(ctx)
+		Expect(err).To(BeNil())
+		Expect(crypter).NotTo(BeNil())
+	})
+
+	It("accepts a base64-encoded 16-byte key", func() {
+		app := &application{
+			EncryptionKey: base64.StdEncoding.EncodeToString([]byte("0123456789012345")),
+		}
+		crypter, err := app.createCrypter(ctx)
+		Expect(err).To(BeNil())
+		Expect(crypter).NotTo(BeNil())
+	})
+
+	It("rejects a key of invalid length", func() {
+		app := &application{
+			EncryptionKey: base64.StdEncoding.EncodeToString([]byte("too-short")),
+		}
+		_, err := app.createCrypter(ctx)
+		Expect(err).NotTo(BeNil())
+	})
+
+	It("rejects a non-base64 key", func() {
+		app := &application{EncryptionKey: "not-valid-base64!!"}
+		_, err := app.createCrypter(ctx)
+		Expect(err).NotTo(BeNil())
+	})
 })

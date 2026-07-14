@@ -6,8 +6,10 @@ package secret
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
+	"github.com/bborbe/crypto"
 	"github.com/bborbe/errors"
 	libkv "github.com/bborbe/kv"
 )
@@ -31,28 +33,47 @@ type Store interface {
 // Keys is a list of secret keys.
 type Keys []Key
 
-// NewStore returns a Store backed by the given kv database.
-func NewStore(db libkv.DB) Store {
+// NewStore returns a Store backed by the given kv database. Every secret is
+// JSON-marshalled and encrypted with crypter before it is written, and
+// decrypted on read, so only ciphertext ever touches the underlying kv
+// database.
+func NewStore(db libkv.DB, crypter crypto.Crypter) Store {
 	return &store{
-		kv: libkv.NewStore[Key, Secret](db, bucketName),
+		kv:      libkv.NewStore[Key, []byte](db, bucketName),
+		crypter: crypter,
 	}
 }
 
 type store struct {
-	kv libkv.Store[Key, Secret]
+	kv      libkv.Store[Key, []byte]
+	crypter crypto.Crypter
 }
 
 func (s *store) Upsert(ctx context.Context, key Key, secret Secret) error {
-	if err := s.kv.Add(ctx, key, secret); err != nil {
+	data, err := json.Marshal(
+		secret,
+	) // #nosec G117 -- marshalled only to be immediately encrypted below
+	if err != nil {
+		return errors.Wrapf(ctx, err, "marshal secret %s failed", key)
+	}
+	encrypted, err := s.crypter.Encrypt(ctx, data)
+	if err != nil {
+		return errors.Wrapf(ctx, err, "encrypt secret %s failed", key)
+	}
+	if err := s.kv.Add(ctx, key, encrypted); err != nil {
 		return errors.Wrapf(ctx, err, "upsert secret %s failed", key)
 	}
 	return nil
 }
 
 func (s *store) Get(ctx context.Context, key Key) (*Secret, error) {
-	secret, err := s.kv.Get(ctx, key)
+	encrypted, err := s.kv.Get(ctx, key)
 	if err != nil {
 		return nil, errors.Wrapf(ctx, err, "get secret %s failed", key)
+	}
+	secret, err := s.decrypt(ctx, *encrypted)
+	if err != nil {
+		return nil, errors.Wrapf(ctx, err, "decrypt secret %s failed", key)
 	}
 	return secret, nil
 }
@@ -60,7 +81,11 @@ func (s *store) Get(ctx context.Context, key Key) (*Secret, error) {
 func (s *store) Search(ctx context.Context, query string) (Keys, error) {
 	needle := strings.ToLower(query)
 	result := Keys{}
-	err := s.kv.Map(ctx, func(ctx context.Context, key Key, secret Secret) error {
+	err := s.kv.Map(ctx, func(ctx context.Context, key Key, encrypted []byte) error {
+		secret, err := s.decrypt(ctx, encrypted)
+		if err != nil {
+			return errors.Wrapf(ctx, err, "decrypt secret %s failed", key)
+		}
 		if needle == "" ||
 			strings.Contains(strings.ToLower(key.String()), needle) ||
 			strings.Contains(strings.ToLower(secret.Username), needle) {
@@ -72,4 +97,17 @@ func (s *store) Search(ctx context.Context, query string) (Keys, error) {
 		return nil, errors.Wrapf(ctx, err, "search secrets for %q failed", query)
 	}
 	return result, nil
+}
+
+// decrypt decrypts and unmarshals a stored ciphertext into a Secret.
+func (s *store) decrypt(ctx context.Context, encrypted []byte) (*Secret, error) {
+	data, err := s.crypter.Decrypt(ctx, encrypted)
+	if err != nil {
+		return nil, errors.Wrapf(ctx, err, "decrypt failed")
+	}
+	var secret Secret
+	if err := json.Unmarshal(data, &secret); err != nil {
+		return nil, errors.Wrapf(ctx, err, "unmarshal secret failed")
+	}
+	return &secret, nil
 }
