@@ -8,7 +8,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
-## Unreleased
+## v0.4.0
 
 - fix: Map TeamVault secret `description` through migrate-teamvault into the create request so migrated secrets keep their description
 - docs: Document POST /api/secrets/ and PATCH /api/secrets/{hashid}/ in the README API table
