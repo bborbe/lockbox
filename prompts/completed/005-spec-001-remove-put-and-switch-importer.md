@@ -1,8 +1,13 @@
 ---
-status: approved
+status: completed
 spec: [001-write-api-teamvault-compat]
+summary: Removed flat PUT upsert handler and DTOs, switched migrate-teamvault from PUT to POST /api/secrets/ with TeamVault create body
+execution_id: lockbox-exec-005-spec-001-remove-put-and-switch-importer
+dark-factory-version: dev
 created: "2026-07-14T16:04:00Z"
 queued: "2026-07-14T14:10:42Z"
+started: "2026-07-14T14:29:14Z"
+completed: "2026-07-14T14:31:58Z"
 branch: dark-factory/write-api-teamvault-compat
 ---
 

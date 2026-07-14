@@ -18,11 +18,12 @@ import (
 
 //counterfeiter:generate -o ../../mocks/lockbox-client.go --fake-name LockboxClient . LockboxClient
 
-// LockboxClient writes secrets into a running Lockbox instance via its HTTP
-// API.
+// LockboxClient creates secrets in a running Lockbox instance via POST
+// /api/secrets/ (TeamVault-compatible write API).
 type LockboxClient interface {
-	// Upsert creates or replaces the secret stored under hashid.
-	Upsert(ctx context.Context, hashid string, req api.UpsertRequest) error
+	// Create sends a TeamVault create request to Lockbox's POST /api/secrets/
+	// endpoint and returns the server-generated hashid on success.
+	Create(ctx context.Context, req api.CreateSecretRequest) (string, error)
 }
 
 // NewLockboxClient returns a LockboxClient talking to baseURL, authenticating
@@ -48,46 +49,45 @@ type lockboxClient struct {
 	password   string
 }
 
-func (l *lockboxClient) Upsert(
+func (l *lockboxClient) Create(
 	ctx context.Context,
-	hashid string,
-	upsertRequest api.UpsertRequest,
-) error {
-	// Marshaling the secret is intentional: this is the request body PUT to
+	req api.CreateSecretRequest,
+) (string, error) {
+	// Marshaling the secret is intentional: this is the request body POST to
 	// Lockbox, which persists the migrated secret.
-	body, err := json.Marshal(upsertRequest) //#nosec G117
+	body, err := json.Marshal(req) //#nosec G117
 	if err != nil {
-		return errors.Wrap(ctx, err, "marshal upsert request failed")
+		return "", errors.Wrap(ctx, err, "marshal create request failed")
 	}
 
-	url := l.baseURL + "/api/secrets/" + hashid + "/"
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(body))
+	url := l.baseURL + "/api/secrets/"
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
-		return errors.Wrap(ctx, err, "build request failed")
+		return "", errors.Wrap(ctx, err, "build request failed")
 	}
-	req.SetBasicAuth(l.username, l.password)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
+	httpReq.SetBasicAuth(l.username, l.password)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Accept", "application/json")
 
-	resp, err := l.httpClient.Do(req)
+	resp, err := l.httpClient.Do(httpReq)
 	if err != nil {
-		return errors.Wrapf(ctx, err, "put secret %s failed", hashid)
+		return "", errors.Wrap(ctx, err, "post secret failed")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode/100 != 2 {
-		return errors.Wrapf(
+		return "", errors.Wrapf(
 			ctx,
 			errUnexpectedStatus,
-			"PUT %s returned status %d",
+			"POST %s returned status %d",
 			url,
 			resp.StatusCode,
 		)
 	}
 
-	var result api.UpsertResult
+	var result api.SecretRepresentation
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return errors.Wrap(ctx, err, "decode upsert result failed")
+		return "", errors.Wrap(ctx, err, "decode create response failed")
 	}
-	return nil
+	return result.Hashid, nil
 }

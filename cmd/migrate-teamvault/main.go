@@ -3,9 +3,9 @@
 // license that can be found in the LICENSE file.
 
 // Command migrate-teamvault is a one-shot API-to-API importer: it reads all
-// secrets from a running TeamVault instance via its HTTP API and PUTs them
-// into a running Lockbox instance. A single secret failing to read or write
-// is logged and skipped; the run continues.
+// secrets from a running TeamVault instance via its HTTP API and creates them
+// via POST /api/secrets/ in a running Lockbox instance. A single secret
+// failing to read or write is logged and skipped; the run continues.
 package main
 
 import (
@@ -34,8 +34,9 @@ type application struct {
 	LockboxPass   string `required:"true" arg:"lockbox-pass"   env:"LOCKBOX_PASS"   usage:"Lockbox HTTP Basic auth password"                       display:"length"`
 }
 
-// Run performs the migration: it reads every secret from TeamVault and PUTs
-// the readable, non-credit-card ones into Lockbox, then logs a summary.
+// Run performs the migration: it reads every secret from TeamVault and creates
+// the readable, non-credit-card ones in Lockbox via POST /api/secrets/, then
+// logs a summary.
 func (a *application) Run(ctx context.Context) error {
 	httpClient := libhttp.CreateHTTPClient(30 * time.Second)
 
