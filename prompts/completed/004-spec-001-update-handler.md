@@ -1,8 +1,13 @@
 ---
-status: approved
+status: completed
 spec: [001-write-api-teamvault-compat]
+summary: 'Implemented PATCH /api/secrets/{hashid}/ (both prefixes) via NewSecretUpdateHandler: loads existing secret (404 on miss), merges body via ApplyUpdate (content_type immutable), upserts, returns 200 with SecretRepresentation.'
+execution_id: lockbox-exec-004-spec-001-update-handler
+dark-factory-version: dev
 created: "2026-07-14T16:03:00Z"
 queued: "2026-07-14T14:10:42Z"
+started: "2026-07-14T14:27:12Z"
+completed: "2026-07-14T14:29:13Z"
 branch: dark-factory/write-api-teamvault-compat
 ---
 
