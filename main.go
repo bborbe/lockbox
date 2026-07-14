@@ -6,11 +6,13 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"os"
 	"time"
 
 	libboltkv "github.com/bborbe/boltkv"
+	"github.com/bborbe/crypto"
 	"github.com/bborbe/errors"
 	libhttp "github.com/bborbe/http"
 	libkv "github.com/bborbe/kv"
@@ -35,19 +37,25 @@ func main() {
 }
 
 type application struct {
-	SentryDSN         string            `required:"true"  arg:"sentry-dsn"        env:"SENTRY_DSN"        usage:"SentryDSN"                                       display:"length"`
-	SentryProxy       string            `required:"false" arg:"sentry-proxy"      env:"SENTRY_PROXY"      usage:"Sentry Proxy"`
-	Listen            string            `required:"true"  arg:"listen"            env:"LISTEN"            usage:"address to listen to"`
-	DataDir           string            `required:"true"  arg:"datadir"           env:"DATADIR"           usage:"data directory"`
-	BasicAuthUsername string            `required:"true"  arg:"basic-auth-user"   env:"BASIC_AUTH_USER"   usage:"HTTP Basic auth username for the /api endpoints"`
-	BasicAuthPassword string            `required:"true"  arg:"basic-auth-pass"   env:"BASIC_AUTH_PASS"   usage:"HTTP Basic auth password for the /api endpoints" display:"length"`
-	BuildGitVersion   string            `required:"false" arg:"build-git-version" env:"BUILD_GIT_VERSION" usage:"Build Git version"                                                default:"dev"`
-	BuildGitCommit    string            `required:"false" arg:"build-git-commit"  env:"BUILD_GIT_COMMIT"  usage:"Build Git commit hash"                                            default:"none"`
-	BuildDate         *libtime.DateTime `required:"false" arg:"build-date"        env:"BUILD_DATE"        usage:"Build timestamp (RFC3339)"`
+	SentryDSN         string            `required:"true"  arg:"sentry-dsn"        env:"SENTRY_DSN"             usage:"SentryDSN"                                                                  display:"length"`
+	SentryProxy       string            `required:"false" arg:"sentry-proxy"      env:"SENTRY_PROXY"           usage:"Sentry Proxy"`
+	Listen            string            `required:"true"  arg:"listen"            env:"LISTEN"                 usage:"address to listen to"`
+	DataDir           string            `required:"true"  arg:"datadir"           env:"DATADIR"                usage:"data directory"`
+	BasicAuthUsername string            `required:"true"  arg:"basic-auth-user"   env:"BASIC_AUTH_USER"        usage:"HTTP Basic auth username for the /api endpoints"`
+	BasicAuthPassword string            `required:"true"  arg:"basic-auth-pass"   env:"BASIC_AUTH_PASS"        usage:"HTTP Basic auth password for the /api endpoints"                            display:"length"`
+	EncryptionKey     string            `required:"true"  arg:"encryption-key"    env:"LOCKBOX_ENCRYPTION_KEY" usage:"base64-encoded AES key (16 or 32 raw bytes) used to encrypt stored secrets" display:"length"`
+	BuildGitVersion   string            `required:"false" arg:"build-git-version" env:"BUILD_GIT_VERSION"      usage:"Build Git version"                                                                           default:"dev"`
+	BuildGitCommit    string            `required:"false" arg:"build-git-commit"  env:"BUILD_GIT_COMMIT"       usage:"Build Git commit hash"                                                                       default:"none"`
+	BuildDate         *libtime.DateTime `required:"false" arg:"build-date"        env:"BUILD_DATE"             usage:"Build timestamp (RFC3339)"`
 }
 
 func (a *application) Run(ctx context.Context, sentryClient libsentry.Client) error {
 	libmetrics.NewBuildInfoMetrics().SetBuildInfo(a.BuildGitVersion, a.BuildGitCommit, a.BuildDate)
+
+	crypter, err := a.createCrypter(ctx)
+	if err != nil {
+		return errors.Wrap(ctx, err, "create crypter failed")
+	}
 
 	db, err := libboltkv.OpenDir(ctx, a.DataDir)
 	if err != nil {
@@ -57,19 +65,41 @@ func (a *application) Run(ctx context.Context, sentryClient libsentry.Client) er
 
 	return service.Run(
 		ctx,
-		a.createHTTPServer(sentryClient, db),
+		a.createHTTPServer(sentryClient, db, crypter),
 	)
+}
+
+// createCrypter parses and validates LOCKBOX_ENCRYPTION_KEY and returns a
+// Crypter for it. The key must base64-decode to exactly 16 or 32 raw bytes
+// (AES-128 or AES-256); the app refuses to start otherwise.
+func (a *application) createCrypter(ctx context.Context) (crypto.Crypter, error) {
+	raw, err := base64.StdEncoding.DecodeString(a.EncryptionKey)
+	if err != nil {
+		return nil, errors.Wrap(ctx, err, "decode LOCKBOX_ENCRYPTION_KEY base64 failed")
+	}
+	switch len(raw) {
+	case 16, 32:
+		// AES-128 or AES-256, valid.
+	default:
+		return nil, errors.Errorf(
+			ctx,
+			"LOCKBOX_ENCRYPTION_KEY must decode to 16 or 32 bytes, got %d",
+			len(raw),
+		)
+	}
+	return crypto.NewCrypter(crypto.SecretKey(raw)), nil
 }
 
 func (a *application) createHTTPServer(
 	sentryClient libsentry.Client,
 	db libkv.DB,
+	crypter crypto.Crypter,
 ) run.Func {
 	return func(ctx context.Context) error {
 		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 
-		secretStore := secret.NewStore(db)
+		secretStore := secret.NewStore(db, crypter)
 
 		router := mux.NewRouter()
 

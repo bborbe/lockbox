@@ -24,6 +24,10 @@ Mirrors the TeamVault read API (see `cmd/fakevault` in teamvault-cli):
 
 Both `/api/…` and `/api/v1/…` route to the same handlers. HTTP Basic auth.
 
+## Encryption at rest
+
+Secrets are AES-GCM encrypted (via [bborbe/crypto](https://github.com/bborbe/crypto)) before they are written to the kv store; only ciphertext ever touches disk. Configure the key with `LOCKBOX_ENCRYPTION_KEY`: a base64-encoded 16- or 32-byte AES key. Generate one with `openssl rand -base64 32`. The server refuses to start if the key is missing or not 16/32 raw bytes.
+
 ## Run locally
 
 ```bash

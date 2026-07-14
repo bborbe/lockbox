@@ -6,7 +6,10 @@ package secret_test
 
 import (
 	"context"
+	"strings"
 
+	"github.com/bborbe/crypto"
+	libkv "github.com/bborbe/kv"
 	"github.com/bborbe/memorykv"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -14,15 +17,20 @@ import (
 	"github.com/bborbe/lockbox/pkg/secret"
 )
 
+// testEncryptionKey is a fixed 32-byte AES-256 key used only in tests.
+var testEncryptionKey = crypto.SecretKey("01234567890123456789012345678901"[:32])
+
 var _ = Describe("Store", func() {
 	var ctx context.Context
+	var db libkv.DB
 	var store secret.Store
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		db, err := memorykv.OpenMemory(ctx)
+		var err error
+		db, err = memorykv.OpenMemory(ctx)
 		Expect(err).To(BeNil())
-		store = secret.NewStore(db)
+		store = secret.NewStore(db, crypto.NewCrypter(testEncryptionKey))
 	})
 
 	Describe("Upsert + Get", func() {
@@ -93,6 +101,40 @@ var _ = Describe("Store", func() {
 			keys, err := store.Search(ctx, "nope")
 			Expect(err).To(BeNil())
 			Expect(keys).To(BeEmpty())
+		})
+	})
+
+	Describe("Encryption at rest", func() {
+		It("round-trips the secret through Upsert and Get unchanged", func() {
+			value := secret.Secret{
+				Username: "alice",
+				URL:      "https://example.com",
+				Password: "s3cr3t-password",
+				File:     "ZmlsZQ==",
+			}
+			Expect(store.Upsert(ctx, secret.Key("RoundTrip"), value)).To(BeNil())
+
+			found, err := store.Get(ctx, secret.Key("RoundTrip"))
+			Expect(err).To(BeNil())
+			Expect(*found).To(Equal(value))
+		})
+
+		It("never writes the plaintext password to the underlying kv bucket", func() {
+			password := "s3cr3t-password-not-in-ciphertext"
+			Expect(
+				store.Upsert(ctx, secret.Key("LeakCheck"), secret.Secret{
+					Username: "alice",
+					Password: password,
+				}),
+			).To(BeNil())
+
+			// Read the raw bytes stored in the "secrets" bucket directly, bypassing
+			// the Store's decryption, to verify only ciphertext is persisted.
+			rawStore := libkv.NewStore[secret.Key, []byte](db, libkv.NewBucketName("secrets"))
+			raw, err := rawStore.Get(ctx, secret.Key("LeakCheck"))
+			Expect(err).To(BeNil())
+			Expect(raw).NotTo(BeNil())
+			Expect(strings.Contains(string(*raw), password)).To(BeFalse())
 		})
 	})
 })

@@ -4,6 +4,7 @@ go 1.26.5
 
 require (
 	github.com/bborbe/boltkv v1.14.4
+	github.com/bborbe/crypto v1.0.2
 	github.com/bborbe/errors v1.5.16
 	github.com/bborbe/http v1.26.17
 	github.com/bborbe/kv v1.21.6
