@@ -8,7 +8,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
-## Unreleased
+## v0.3.0
 
 - Encrypt stored secrets at rest: `pkg/secret.NewStore` now takes a `github.com/bborbe/crypto` `Crypter` and AES-GCM encrypts each secret (JSON-marshalled) before writing it to the kv bucket, decrypting on read; depends on the `Crypter` interface so the algorithm can be swapped later
 - Add required `LOCKBOX_ENCRYPTION_KEY` config (base64-encoded 16- or 32-byte AES key); the server refuses to start if it is missing or the decoded key length is invalid
