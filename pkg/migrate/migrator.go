@@ -93,13 +93,23 @@ func (m *migrator) migrateOne(ctx context.Context, secret TeamVaultSecret) error
 		return errors.Wrapf(ctx, err, "get revision data for %s failed", secret.Hashid)
 	}
 
-	if err := m.sink.Upsert(ctx, secret.Hashid, api.UpsertRequest{
-		Username: secret.Username,
-		URL:      secret.URL,
-		Password: data.Password,
-		File:     data.File,
-	}); err != nil {
-		return errors.Wrapf(ctx, err, "upsert secret %s into lockbox failed", secret.Hashid)
+	req := api.CreateSecretRequest{
+		ContentType: secret.ContentType,
+		Name:        secret.Name,
+		Username:    secret.Username,
+		URL:         secret.URL,
+		Description: secret.Description,
+		SecretData:  &api.SecretData{},
+	}
+	switch secret.ContentType {
+	case ContentTypePassword:
+		req.SecretData.Password = data.Password
+	case ContentTypeFile:
+		req.SecretData.FileContent = data.File
+	}
+
+	if _, err := m.sink.Create(ctx, req); err != nil {
+		return errors.Wrapf(ctx, err, "create secret %s in lockbox failed", secret.Hashid)
 	}
 
 	return nil

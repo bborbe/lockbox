@@ -29,4 +29,17 @@ type Secret struct {
 	Password string
 	// File is the base64-encoded file payload; may be empty.
 	File string
+	// Name is the human-readable secret name (TeamVault name).
+	Name string
+	// Description is a free-text description of the secret; may be empty.
+	Description string
+	// ContentType is the TeamVault content type, either ContentTypePassword or
+	// ContentTypeFile.
+	ContentType string
 }
+
+// ContentTypePassword is the TeamVault content type for a password secret.
+const ContentTypePassword = "password"
+
+// ContentTypeFile is the TeamVault content type for a file secret.
+const ContentTypeFile = "file"

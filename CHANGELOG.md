@@ -8,6 +8,19 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
+## Unreleased
+
+- fix: Map TeamVault secret `description` through migrate-teamvault into the create request so migrated secrets keep their description
+- docs: Document POST /api/secrets/ and PATCH /api/secrets/{hashid}/ in the README API table
+- feat: Replace flat PUT upsert with TeamVault-compatible write API: POST /api/secrets/ (create, server-generated hashid) and PATCH /api/secrets/{hashid}/ (update), on both /api and /api/v1
+- refactor: Switch migrate-teamvault importer from the flat PUT to POST /api/secrets/; remove UpsertRequest/UpsertResult DTOs and the flat-PUT handler
+- feat: add `POST /api/secrets/` (and `/api/v1/secrets/`) handler `NewSecretCreateHandler` that decodes a TeamVault create body, validates it, generates a fresh unique key, stores the secret encrypted via check-and-set, and responds HTTP 201 with a TeamVault-shaped representation containing the new hashid and api_url
+- feat: expand `Secret` domain record with `Name`, `Description`, `ContentType` fields and add `ContentTypePassword`/`ContentTypeFile` constants for TeamVault write-API compatibility
+- feat: add server-side `KeyGenerator` interface with `NewKeyGenerator` constructor producing URL-safe base62 keys of fixed 8-character length via `crypto/rand`
+- feat: add check-and-set `Create` method to `Store` interface that returns `ErrKeyExists` if key already exists; used by create handler to enforce uniqueness
+- feat: add TeamVault write-API DTOs (`CreateSecretRequest`, `SecretData`, `SecretRepresentation`) and a pure `Validate`/`ApplyUpdate` pair that maps a decoded create/update body into a `secret.Secret`, returning HTTP 400 for malformed input
+- feat: add `PATCH /api/secrets/{hashid}/` (and `/api/v1/secrets/{hashid}/`) handler `NewSecretUpdateHandler` that loads the existing secret, merges in metadata fields and new secret_data from the body, keeps `content_type` immutable, persists via `Upsert`, and responds HTTP 200 with the updated `SecretRepresentation`
+
 ## v0.3.1
 
 - Make `SENTRY_DSN` optional — an empty value disables Sentry; the server no longer refuses to start without it (verified: starts with empty DSN, `/healthz` returns 200)

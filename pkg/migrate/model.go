@@ -30,6 +30,8 @@ type TeamVaultSecret struct {
 	DataReadable bool `json:"data_readable"`
 	// Name is the human-readable secret name.
 	Name string `json:"name"`
+	// Description is the free-text description of the secret; may be empty.
+	Description string `json:"description"`
 	// Status is one of "ok", "needs_changing" or "deleted".
 	Status string `json:"status"`
 }

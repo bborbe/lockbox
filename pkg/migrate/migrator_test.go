@@ -7,7 +7,6 @@ package migrate_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -26,7 +25,7 @@ var _ = Describe("Migrator", func() {
 		lockboxServer  *httptest.Server
 		teamVaultURL   string
 		lockboxMu      sync.Mutex
-		lockboxPuts    map[string]api.UpsertRequest
+		lockboxCreates map[string]api.CreateSecretRequest
 		report         migrate.Report
 		runErr         error
 	)
@@ -34,7 +33,7 @@ var _ = Describe("Migrator", func() {
 	BeforeEach(func() {
 		ctx = context.Background()
 		teamVaultCalls = nil
-		lockboxPuts = map[string]api.UpsertRequest{}
+		lockboxCreates = map[string]api.CreateSecretRequest{}
 
 		teamVaultMux := http.NewServeMux()
 		teamVaultServer := httptest.NewServer(teamVaultMux)
@@ -84,6 +83,7 @@ var _ = Describe("Migrator", func() {
 						"current_revision": teamVaultURL + "/api/secret-revisions/rev-pw/",
 						"data_readable":    true,
 						"name":             "password secret",
+						"description":      "prod database root",
 						"status":           "ok",
 					},
 					{
@@ -166,25 +166,24 @@ var _ = Describe("Migrator", func() {
 		DeferCleanup(lockboxServer.Close)
 
 		lockboxMux.HandleFunc("/api/secrets/", func(w http.ResponseWriter, r *http.Request) {
-			Expect(r.Method).To(Equal(http.MethodPut))
+			Expect(r.Method).To(Equal(http.MethodPost))
 
 			username, password, ok := r.BasicAuth()
 			Expect(ok).To(BeTrue())
 			Expect(username).To(Equal("lb-user"))
 			Expect(password).To(Equal("lb-pass"))
 
-			hashid := r.URL.Path[len("/api/secrets/") : len(r.URL.Path)-1]
-
-			var body api.UpsertRequest
+			var body api.CreateSecretRequest
 			Expect(json.NewDecoder(r.Body).Decode(&body)).To(Succeed())
 
 			lockboxMu.Lock()
-			lockboxPuts[hashid] = body
+			lockboxCreates[body.Name] = body
 			lockboxMu.Unlock()
 
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(api.UpsertResult{
-				APIURL: lockboxServer.URL + fmt.Sprintf("/api/secrets/%s/", hashid),
+			_ = json.NewEncoder(w).Encode(api.SecretRepresentation{
+				Hashid: "lockbox-" + body.Name,
+				APIURL: lockboxServer.URL + "/api/secrets/lockbox-" + body.Name + "/",
 			})
 		})
 	})
@@ -224,39 +223,40 @@ var _ = Describe("Migrator", func() {
 	It("maps a password secret correctly", func() {
 		lockboxMu.Lock()
 		defer lockboxMu.Unlock()
-		Expect(lockboxPuts).To(HaveKey("aaaa1111"))
-		Expect(lockboxPuts["aaaa1111"]).To(Equal(api.UpsertRequest{
-			Username: "pwuser",
-			URL:      "https://password.example.com",
-			Password: "s3cr3t",
-			File:     "",
-		}))
+		Expect(lockboxCreates).To(HaveKey("password secret"))
+		req := lockboxCreates["password secret"]
+		Expect(req.ContentType).To(Equal("password"))
+		Expect(req.Username).To(Equal("pwuser"))
+		Expect(req.URL).To(Equal("https://password.example.com"))
+		Expect(req.Description).To(Equal("prod database root"))
+		Expect(req.SecretData).NotTo(BeNil())
+		Expect(req.SecretData.Password).To(Equal("s3cr3t"))
+		Expect(req.SecretData.FileContent).To(Equal(""))
 	})
 
 	It("maps a file secret correctly", func() {
 		lockboxMu.Lock()
 		defer lockboxMu.Unlock()
-		Expect(lockboxPuts).To(HaveKey("bbbb2222"))
-		Expect(lockboxPuts["bbbb2222"]).To(Equal(api.UpsertRequest{
-			Username: "fileuser",
-			URL:      "https://file.example.com",
-			Password: "",
-			File:     "ZmlsZWNvbnRlbnQ=",
-		}))
+		Expect(lockboxCreates).To(HaveKey("file secret"))
+		req := lockboxCreates["file secret"]
+		Expect(req.ContentType).To(Equal("file"))
+		Expect(req.SecretData).NotTo(BeNil())
+		Expect(req.SecretData.Password).To(Equal(""))
+		Expect(req.SecretData.FileContent).To(Equal("ZmlsZWNvbnRlbnQ="))
 	})
 
 	It("migrates the secret found on the second page", func() {
 		lockboxMu.Lock()
 		defer lockboxMu.Unlock()
-		Expect(lockboxPuts).To(HaveKey("ffff6666"))
-		Expect(lockboxPuts["ffff6666"].Password).To(Equal("page2pw"))
+		Expect(lockboxCreates).To(HaveKey("page2 secret"))
+		Expect(lockboxCreates["page2 secret"].SecretData.Password).To(Equal("page2pw"))
 	})
 
 	It("never writes credit-card, unreadable or failed secrets to lockbox", func() {
 		lockboxMu.Lock()
 		defer lockboxMu.Unlock()
-		Expect(lockboxPuts).NotTo(HaveKey("cccc3333"))
-		Expect(lockboxPuts).NotTo(HaveKey("dddd4444"))
-		Expect(lockboxPuts).NotTo(HaveKey("eeee5555"))
+		Expect(lockboxCreates).NotTo(HaveKey("credit card secret"))
+		Expect(lockboxCreates).NotTo(HaveKey("unreadable secret"))
+		Expect(lockboxCreates).NotTo(HaveKey("error secret"))
 	})
 })

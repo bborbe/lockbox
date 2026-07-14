@@ -10,84 +10,87 @@ import (
 )
 
 type LockboxClient struct {
-	UpsertStub        func(context.Context, string, api.UpsertRequest) error
-	upsertMutex       sync.RWMutex
-	upsertArgsForCall []struct {
+	CreateStub        func(context.Context, api.CreateSecretRequest) (string, error)
+	createMutex       sync.RWMutex
+	createArgsForCall []struct {
 		arg1 context.Context
-		arg2 string
-		arg3 api.UpsertRequest
+		arg2 api.CreateSecretRequest
 	}
-	upsertReturns struct {
-		result1 error
+	createReturns struct {
+		result1 string
+		result2 error
 	}
-	upsertReturnsOnCall map[int]struct {
-		result1 error
+	createReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *LockboxClient) Upsert(arg1 context.Context, arg2 string, arg3 api.UpsertRequest) error {
-	fake.upsertMutex.Lock()
-	ret, specificReturn := fake.upsertReturnsOnCall[len(fake.upsertArgsForCall)]
-	fake.upsertArgsForCall = append(fake.upsertArgsForCall, struct {
+func (fake *LockboxClient) Create(arg1 context.Context, arg2 api.CreateSecretRequest) (string, error) {
+	fake.createMutex.Lock()
+	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
+	fake.createArgsForCall = append(fake.createArgsForCall, struct {
 		arg1 context.Context
-		arg2 string
-		arg3 api.UpsertRequest
-	}{arg1, arg2, arg3})
-	stub := fake.UpsertStub
-	fakeReturns := fake.upsertReturns
-	fake.recordInvocation("Upsert", []interface{}{arg1, arg2, arg3})
-	fake.upsertMutex.Unlock()
+		arg2 api.CreateSecretRequest
+	}{arg1, arg2})
+	stub := fake.CreateStub
+	fakeReturns := fake.createReturns
+	fake.recordInvocation("Create", []interface{}{arg1, arg2})
+	fake.createMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fakeReturns.result1
+	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *LockboxClient) UpsertCallCount() int {
-	fake.upsertMutex.RLock()
-	defer fake.upsertMutex.RUnlock()
-	return len(fake.upsertArgsForCall)
+func (fake *LockboxClient) CreateCallCount() int {
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	return len(fake.createArgsForCall)
 }
 
-func (fake *LockboxClient) UpsertCalls(stub func(context.Context, string, api.UpsertRequest) error) {
-	fake.upsertMutex.Lock()
-	defer fake.upsertMutex.Unlock()
-	fake.UpsertStub = stub
+func (fake *LockboxClient) CreateCalls(stub func(context.Context, api.CreateSecretRequest) (string, error)) {
+	fake.createMutex.Lock()
+	defer fake.createMutex.Unlock()
+	fake.CreateStub = stub
 }
 
-func (fake *LockboxClient) UpsertArgsForCall(i int) (context.Context, string, api.UpsertRequest) {
-	fake.upsertMutex.RLock()
-	defer fake.upsertMutex.RUnlock()
-	argsForCall := fake.upsertArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+func (fake *LockboxClient) CreateArgsForCall(i int) (context.Context, api.CreateSecretRequest) {
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	argsForCall := fake.createArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *LockboxClient) UpsertReturns(result1 error) {
-	fake.upsertMutex.Lock()
-	defer fake.upsertMutex.Unlock()
-	fake.UpsertStub = nil
-	fake.upsertReturns = struct {
-		result1 error
-	}{result1}
+func (fake *LockboxClient) CreateReturns(result1 string, result2 error) {
+	fake.createMutex.Lock()
+	defer fake.createMutex.Unlock()
+	fake.CreateStub = nil
+	fake.createReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *LockboxClient) UpsertReturnsOnCall(i int, result1 error) {
-	fake.upsertMutex.Lock()
-	defer fake.upsertMutex.Unlock()
-	fake.UpsertStub = nil
-	if fake.upsertReturnsOnCall == nil {
-		fake.upsertReturnsOnCall = make(map[int]struct {
-			result1 error
+func (fake *LockboxClient) CreateReturnsOnCall(i int, result1 string, result2 error) {
+	fake.createMutex.Lock()
+	defer fake.createMutex.Unlock()
+	fake.CreateStub = nil
+	if fake.createReturnsOnCall == nil {
+		fake.createReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
 		})
 	}
-	fake.upsertReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+	fake.createReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *LockboxClient) Invocations() map[string][][]interface{} {
