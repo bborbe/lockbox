@@ -8,6 +8,10 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
+## Unreleased
+
+- Make `SENTRY_DSN` optional — an empty value disables Sentry; the server no longer refuses to start without it (verified: starts with empty DSN, `/healthz` returns 200)
+
 ## v0.3.0
 
 - Encrypt stored secrets at rest: `pkg/secret.NewStore` now takes a `github.com/bborbe/crypto` `Crypter` and AES-GCM encrypts each secret (JSON-marshalled) before writing it to the kv bucket, decrypting on read; depends on the `Crypter` interface so the algorithm can be swapped later
