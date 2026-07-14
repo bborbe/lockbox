@@ -51,9 +51,19 @@ META_RESP="$(lb_curl "/api/secrets/$KEY/")"
 assert_eq "metadata username" "demo-user" "$(echo "$META_RESP" | jq -r .username)"
 assert_eq "metadata url" "https://demo.example/login" "$(echo "$META_RESP" | jq -r .url)"
 
-# Read the password revision data back.
+# Read the password revision data back (direct URL).
 REV_RESP="$(lb_curl "/api/secret-revisions/$KEY/data")"
 assert_eq "revision password" "demo-pass-123" "$(echo "$REV_RESP" | jq -r .password)"
+
+# Read the password by FOLLOWING current_revision, exactly as a real TeamVault
+# client does: it appends "data" to current_revision. current_revision must end
+# at ".../{key}/" (no "/data"), else the client would request ".../datadata".
+CR="$(echo "$META_RESP" | jq -r .current_revision)"
+assert_contains "current_revision points at revision base" "/secret-revisions/$KEY/" "$CR"
+case "$CR" in *"/data") assert_eq "current_revision has no /data suffix" "no-data-suffix" "HAS-DATA-SUFFIX" ;; esac
+CR_PATH="/${CR#*://*/}"   # strip scheme+host, keep leading-slash path
+REV_VIA_CR="$(lb_curl "${CR_PATH}data")"
+assert_eq "revision password via current_revision+data" "demo-pass-123" "$(echo "$REV_VIA_CR" | jq -r .password)"
 
 # Update a metadata field.
 UPDATE_STATUS="$(lb_status "/api/secrets/$KEY/" -X PATCH -H 'Content-Type: application/json' \
