@@ -70,7 +70,12 @@ var _ = Describe("Store", func() {
 	Describe("Search", func() {
 		BeforeEach(func() {
 			Expect(
-				store.Upsert(ctx, secret.Key("GitHubToken"), secret.Secret{Username: "octocat"}),
+				store.Upsert(ctx, secret.Key("GitHubToken"), secret.Secret{
+					Name:        "Production GitHub",
+					Username:    "octocat",
+					URL:         "https://github.example.com",
+					Description: "CI deploy token for the release pipeline",
+				}),
 			).To(BeNil())
 			Expect(
 				store.Upsert(ctx, secret.Key("AwsKey"), secret.Secret{Username: "root"}),
@@ -102,6 +107,24 @@ var _ = Describe("Store", func() {
 			keys, err := store.Search(ctx, "nope")
 			Expect(err).To(BeNil())
 			Expect(keys).To(BeEmpty())
+		})
+
+		It("matches a substring of the name case-insensitively", func() {
+			keys, err := store.Search(ctx, "production github")
+			Expect(err).To(BeNil())
+			Expect(keys).To(ConsistOf(secret.Key("GitHubToken")))
+		})
+
+		It("matches a substring of the url case-insensitively", func() {
+			keys, err := store.Search(ctx, "GITHUB.EXAMPLE.COM")
+			Expect(err).To(BeNil())
+			Expect(keys).To(ConsistOf(secret.Key("GitHubToken")))
+		})
+
+		It("matches a substring of the description case-insensitively", func() {
+			keys, err := store.Search(ctx, "release pipeline")
+			Expect(err).To(BeNil())
+			Expect(keys).To(ConsistOf(secret.Key("GitHubToken")))
 		})
 	})
 

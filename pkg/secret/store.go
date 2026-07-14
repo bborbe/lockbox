@@ -124,7 +124,10 @@ func (s *store) Search(ctx context.Context, query string) (Keys, error) {
 		}
 		if needle == "" ||
 			strings.Contains(strings.ToLower(key.String()), needle) ||
-			strings.Contains(strings.ToLower(secret.Username), needle) {
+			strings.Contains(strings.ToLower(secret.Name), needle) ||
+			strings.Contains(strings.ToLower(secret.Username), needle) ||
+			strings.Contains(strings.ToLower(secret.URL), needle) ||
+			strings.Contains(strings.ToLower(secret.Description), needle) {
 			result = append(result, key)
 		}
 		return nil
