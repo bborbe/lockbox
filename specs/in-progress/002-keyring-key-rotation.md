@@ -1,5 +1,9 @@
 ---
-status: draft
+status: prompted
+approved: "2026-07-14T19:48:12Z"
+generating: "2026-07-14T19:48:29Z"
+prompted: "2026-07-14T19:58:42Z"
+branch: dark-factory/keyring-key-rotation
 ---
 
 ## Summary

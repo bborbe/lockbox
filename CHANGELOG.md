@@ -8,6 +8,10 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
+## Unreleased
+
+- feat: add `pkg/keyring` package with `Keyring` type satisfying `crypto.Crypter`; encrypts under primary key with a content-derived SHA-256/4 key-id frame, decrypts by id with authenticated try-each fallback, and reads pre-keyring (un-framed) ciphertext unchanged
+
 ## v0.5.0
 
 - feat: search now matches secret name, url and description (in addition to key and username) for TeamVault-compatible `?search=` behavior
