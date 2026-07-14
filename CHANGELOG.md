@@ -10,6 +10,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+- feat: add `POST /api/secrets/` (and `/api/v1/secrets/`) handler `NewSecretCreateHandler` that decodes a TeamVault create body, validates it, generates a fresh unique key, stores the secret encrypted via check-and-set, and responds HTTP 201 with a TeamVault-shaped representation containing the new hashid and api_url
 - feat: expand `Secret` domain record with `Name`, `Description`, `ContentType` fields and add `ContentTypePassword`/`ContentTypeFile` constants for TeamVault write-API compatibility
 - feat: add server-side `KeyGenerator` interface with `NewKeyGenerator` constructor producing URL-safe base62 keys of fixed 8-character length via `crypto/rand`
 - feat: add check-and-set `Create` method to `Store` interface that returns `ErrKeyExists` if key already exists; used by create handler to enforce uniqueness

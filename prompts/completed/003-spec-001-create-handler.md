@@ -1,8 +1,13 @@
 ---
-status: approved
+status: completed
 spec: [001-write-api-teamvault-compat]
+summary: Implemented POST /api/secrets/ handler with Basic auth, unique key generation, encrypted check-and-set storage, and HTTP 201 TeamVault-shaped response
+execution_id: lockbox-exec-003-spec-001-create-handler
+dark-factory-version: dev
 created: "2026-07-14T16:02:00Z"
 queued: "2026-07-14T14:10:42Z"
+started: "2026-07-14T14:23:25Z"
+completed: "2026-07-14T14:27:11Z"
 branch: dark-factory/write-api-teamvault-compat
 ---
 
