@@ -37,9 +37,10 @@ type Store interface {
 	Create(ctx context.Context, key Key, secret Secret) error
 	// Get returns the secret stored under key, or an error if absent.
 	Get(ctx context.Context, key Key) (*Secret, error)
-	// Search returns the keys whose key or username contains query
-	// (case-insensitive). An empty query matches every secret.
-	Search(ctx context.Context, query string) (Keys, error)
+	// Search returns a record (key, name, username, url) for every secret whose
+	// key, name, username, url, or description contains query (case-insensitive).
+	// An empty query matches every secret. No secret value is returned.
+	Search(ctx context.Context, query string) (SearchRecords, error)
 	// ReEncrypt rewrites every stored secret sealed under the current primary
 	// key. It reads each secret through the configured crypter and Upserts it
 	// back, so any secret still sealed under a non-primary (or pre-keyring) key
@@ -53,6 +54,19 @@ type Store interface {
 
 // Keys is a list of secret keys.
 type Keys []Key
+
+// SearchRecord is one search match: the secret's Key plus the metadata
+// fields (Name, Username, URL) needed to render a TeamVault search result.
+// It deliberately carries no secret value (Password/File).
+type SearchRecord struct {
+	Key      Key
+	Name     string
+	Username string
+	URL      string
+}
+
+// SearchRecords is a list of search matches.
+type SearchRecords []SearchRecord
 
 // NewStore returns a Store backed by the given kv database. Every secret is
 // JSON-marshalled and encrypted with crypter before it is written, and
@@ -123,9 +137,9 @@ func (s *store) Get(ctx context.Context, key Key) (*Secret, error) {
 	return secret, nil
 }
 
-func (s *store) Search(ctx context.Context, query string) (Keys, error) {
+func (s *store) Search(ctx context.Context, query string) (SearchRecords, error) {
 	needle := strings.ToLower(query)
-	result := Keys{}
+	result := SearchRecords{}
 	err := s.kv.Map(ctx, func(ctx context.Context, key Key, encrypted []byte) error {
 		secret, err := s.decrypt(ctx, encrypted)
 		if err != nil {
@@ -137,7 +151,12 @@ func (s *store) Search(ctx context.Context, query string) (Keys, error) {
 			strings.Contains(strings.ToLower(secret.Username), needle) ||
 			strings.Contains(strings.ToLower(secret.URL), needle) ||
 			strings.Contains(strings.ToLower(secret.Description), needle) {
-			result = append(result, key)
+			result = append(result, SearchRecord{
+				Key:      key,
+				Name:     secret.Name,
+				Username: secret.Username,
+				URL:      secret.URL,
+			})
 		}
 		return nil
 	})
@@ -148,22 +167,22 @@ func (s *store) Search(ctx context.Context, query string) (Keys, error) {
 }
 
 func (s *store) ReEncrypt(ctx context.Context) error {
-	keys, err := s.Search(ctx, "")
+	records, err := s.Search(ctx, "")
 	if err != nil {
 		return errors.Wrapf(ctx, err, "re-encrypt: list secrets failed")
 	}
-	for _, key := range keys {
+	for _, record := range records {
 		select {
 		case <-ctx.Done():
 			return errors.Wrapf(ctx, ctx.Err(), "re-encrypt cancelled")
 		default:
 		}
-		sec, err := s.Get(ctx, key)
+		sec, err := s.Get(ctx, record.Key)
 		if err != nil {
-			return errors.Wrapf(ctx, err, "re-encrypt: read secret %s failed", key)
+			return errors.Wrapf(ctx, err, "re-encrypt: read secret %s failed", record.Key)
 		}
-		if err := s.Upsert(ctx, key, *sec); err != nil {
-			return errors.Wrapf(ctx, err, "re-encrypt: rewrite secret %s failed", key)
+		if err := s.Upsert(ctx, record.Key, *sec); err != nil {
+			return errors.Wrapf(ctx, err, "re-encrypt: rewrite secret %s failed", record.Key)
 		}
 	}
 	return nil

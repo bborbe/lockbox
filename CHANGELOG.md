@@ -11,6 +11,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 - feat: GET /api/secrets/{key}/ now returns the secret `name` alongside `username`, `url`, `current_revision` (TeamVault-compatible detail shape); `teamvault-cli info` can now show Lockbox secret names
+- feat: GET /api/secrets/?search=q now returns a `{count, next, previous, results}` envelope where each result carries `hashid`, `name`, `username`, `url` alongside the existing `api_url` (TeamVault-compatible search shape); `teamvault-cli search` can now show Lockbox secret names
 
 ## v0.7.0
 

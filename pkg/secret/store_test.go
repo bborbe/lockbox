@@ -85,46 +85,60 @@ var _ = Describe("Store", func() {
 			).To(BeNil())
 		})
 
-		It("returns every key for an empty query", func() {
-			keys, err := store.Search(ctx, "")
+		It("returns every record for an empty query", func() {
+			records, err := store.Search(ctx, "")
 			Expect(err).To(BeNil())
-			Expect(keys).To(HaveLen(3))
+			Expect(records).To(HaveLen(3))
 		})
 
 		It("matches a substring of the key case-insensitively", func() {
-			keys, err := store.Search(ctx, "github")
+			records, err := store.Search(ctx, "github")
 			Expect(err).To(BeNil())
-			Expect(keys).To(ConsistOf(secret.Key("GitHubToken")))
+			Expect(records).To(HaveLen(1))
+			Expect(records[0].Key).To(Equal(secret.Key("GitHubToken")))
 		})
 
 		It("matches a substring of the username case-insensitively", func() {
-			keys, err := store.Search(ctx, "OCTOCAT")
+			records, err := store.Search(ctx, "OCTOCAT")
 			Expect(err).To(BeNil())
-			Expect(keys).To(ConsistOf(secret.Key("GitHubToken")))
+			Expect(records).To(HaveLen(1))
+			Expect(records[0].Key).To(Equal(secret.Key("GitHubToken")))
 		})
 
-		It("returns no keys when nothing matches", func() {
-			keys, err := store.Search(ctx, "nope")
+		It("returns no records when nothing matches", func() {
+			records, err := store.Search(ctx, "nope")
 			Expect(err).To(BeNil())
-			Expect(keys).To(BeEmpty())
+			Expect(records).To(BeEmpty())
 		})
 
 		It("matches a substring of the name case-insensitively", func() {
-			keys, err := store.Search(ctx, "production github")
+			records, err := store.Search(ctx, "production github")
 			Expect(err).To(BeNil())
-			Expect(keys).To(ConsistOf(secret.Key("GitHubToken")))
+			Expect(records).To(HaveLen(1))
+			Expect(records[0].Key).To(Equal(secret.Key("GitHubToken")))
 		})
 
 		It("matches a substring of the url case-insensitively", func() {
-			keys, err := store.Search(ctx, "GITHUB.EXAMPLE.COM")
+			records, err := store.Search(ctx, "GITHUB.EXAMPLE.COM")
 			Expect(err).To(BeNil())
-			Expect(keys).To(ConsistOf(secret.Key("GitHubToken")))
+			Expect(records).To(HaveLen(1))
+			Expect(records[0].Key).To(Equal(secret.Key("GitHubToken")))
 		})
 
 		It("matches a substring of the description case-insensitively", func() {
-			keys, err := store.Search(ctx, "release pipeline")
+			records, err := store.Search(ctx, "release pipeline")
 			Expect(err).To(BeNil())
-			Expect(keys).To(ConsistOf(secret.Key("GitHubToken")))
+			Expect(records).To(HaveLen(1))
+			Expect(records[0].Key).To(Equal(secret.Key("GitHubToken")))
+		})
+
+		It("returns the secret metadata on a match", func() {
+			records, err := store.Search(ctx, "github")
+			Expect(err).To(BeNil())
+			Expect(records).To(HaveLen(1))
+			Expect(records[0].Name).To(Equal("Production GitHub"))
+			Expect(records[0].Username).To(Equal("octocat"))
+			Expect(records[0].URL).To(Equal("https://github.example.com"))
 		})
 	})
 

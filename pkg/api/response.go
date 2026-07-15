@@ -24,13 +24,23 @@ type RevisionData struct {
 	File     string `json:"file"`
 }
 
-// SearchResults is the body of GET /api/secrets/?search=q.
+// SearchResults is the body of GET /api/secrets/?search=q. It is a single
+// page: count is the number of matches, next and previous are always null
+// (Lockbox does not paginate), results is the array of matches.
 type SearchResults struct {
-	Results []SearchResult `json:"results"`
+	Count    int            `json:"count"`
+	Next     *string        `json:"next"`
+	Previous *string        `json:"previous"`
+	Results  []SearchResult `json:"results"`
 }
 
-// SearchResult is one entry in a SearchResults list; api_url is the absolute
-// URL of that secret's metadata endpoint.
+// SearchResult is one entry in a SearchResults page. It carries the secret's
+// metadata (name, username, url) plus its hashid and the absolute api_url of
+// its metadata endpoint. It carries no secret value.
 type SearchResult struct {
-	APIURL string `json:"api_url"`
+	Hashid   string `json:"hashid"`
+	APIURL   string `json:"api_url"`
+	Name     string `json:"name"`
+	Username string `json:"username"`
+	URL      string `json:"url"`
 }

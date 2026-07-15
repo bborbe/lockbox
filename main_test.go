@@ -552,6 +552,74 @@ var _ = Describe("TeamVault contract", func() {
 					Expect(getResp.Code).NotTo(Equal(http.StatusOK))
 				})
 			})
+
+			// -------------------------------------------------------------------------
+			// GET /secrets/?search=q → TeamVault-compatible envelope
+			// -------------------------------------------------------------------------
+
+			Context("GET /secrets/?search=q", func() {
+				It("returns a count/next/previous/results envelope with name metadata", func() {
+					// Create a secret with a distinctive name
+					postBody := api.CreateSecretRequest{
+						ContentType: secret.ContentTypePassword,
+						Name:        "searchable-name",
+						Username:    "search-user",
+						URL:         "https://search.example.com",
+						SecretData:  &api.SecretData{Password: "search-pw"},
+					}
+					postResp := doJSON(router, http.MethodPost, prefix+"/secrets/", true, postBody)
+					Expect(postResp.Code).To(Equal(http.StatusCreated))
+
+					var postResult api.SecretRepresentation
+					err := json.NewDecoder(postResp.Body).Decode(&postResult)
+					Expect(err).To(BeNil())
+					hashid := postResult.Hashid
+
+					// Search for it
+					searchResp := doJSON(
+						router,
+						http.MethodGet,
+						prefix+"/secrets/?search=searchable",
+						true,
+						nil,
+					)
+					Expect(searchResp.Code).To(Equal(http.StatusOK))
+
+					var searchBody map[string]any
+					err = json.NewDecoder(searchResp.Body).Decode(&searchBody)
+					Expect(err).To(BeNil())
+
+					// Envelope shape
+					Expect(searchBody).To(HaveKey("count"))
+					Expect(searchBody).To(HaveKey("next"))
+					Expect(searchBody).To(HaveKey("previous"))
+					Expect(searchBody).To(HaveKey("results"))
+					Expect(searchBody["count"]).To(BeNumerically(">=", 1))
+
+					// Find the created secret's result by hashid and assert its fields
+					results, ok := searchBody["results"].([]any)
+					Expect(ok).To(BeTrue())
+					var found bool
+					for _, r := range results {
+						result, ok := r.(map[string]any)
+						Expect(ok).To(BeTrue())
+						if result["hashid"] == hashid {
+							found = true
+							Expect(result["name"]).To(Equal("searchable-name"))
+							Expect(result["username"]).To(Equal("search-user"))
+							Expect(result["url"]).To(Equal("https://search.example.com"))
+							Expect(result["api_url"]).To(Equal(
+								"http://example.com" + prefix + "/secrets/" + hashid + "/",
+							))
+							// Secret values must NOT be present
+							Expect(result).NotTo(HaveKey("password"))
+							Expect(result).NotTo(HaveKey("file"))
+							break
+						}
+					}
+					Expect(found).To(BeTrue(), "search results should contain the created secret")
+				})
+			})
 		})
 	}
 })

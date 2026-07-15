@@ -31,8 +31,11 @@ var _ = Describe("SecretSearchHandler", func() {
 		httpHandler = libhttp.NewJSONErrorHandler(handler.NewSecretSearchHandler(store))
 	})
 
-	It("returns the matching keys as absolute api_url entries", func() {
-		store.SearchReturns(secret.Keys{"AbC123", "DeF456"}, nil)
+	It("returns the matching records as an enriched envelope", func() {
+		store.SearchReturns(secret.SearchRecords{
+			{Key: "AbC123", Name: "prod", Username: "alice", URL: "https://a.example"},
+			{Key: "DeF456", Name: "stage", Username: "bob", URL: "https://b.example"},
+		}, nil)
 
 		req := httptest.NewRequest(http.MethodGet, "/api/secrets/?search=ab", nil)
 		resp := httptest.NewRecorder()
@@ -42,16 +45,42 @@ var _ = Describe("SecretSearchHandler", func() {
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		var body api.SearchResults
 		Expect(json.Unmarshal(resp.Body.Bytes(), &body)).To(BeNil())
+		Expect(body.Count).To(Equal(2))
+		Expect(body.Next).To(BeNil())
+		Expect(body.Previous).To(BeNil())
 		Expect(body.Results).To(HaveLen(2))
+		Expect(body.Results[0].Hashid).To(Equal("AbC123"))
 		Expect(body.Results[0].APIURL).To(Equal("http://example.com/api/secrets/AbC123/"))
+		Expect(body.Results[0].Name).To(Equal("prod"))
+		Expect(body.Results[0].Username).To(Equal("alice"))
+		Expect(body.Results[0].URL).To(Equal("https://a.example"))
+		Expect(body.Results[1].Hashid).To(Equal("DeF456"))
 		Expect(body.Results[1].APIURL).To(Equal("http://example.com/api/secrets/DeF456/"))
 
 		_, query := store.SearchArgsForCall(0)
 		Expect(query).To(Equal("ab"))
 	})
 
+	It("returns an empty envelope when no records match", func() {
+		store.SearchReturns(secret.SearchRecords{}, nil)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/secrets/?search=nope", nil)
+		resp := httptest.NewRecorder()
+
+		httpHandler.ServeHTTP(resp, req)
+
+		Expect(resp.Code).To(Equal(http.StatusOK))
+		var body api.SearchResults
+		Expect(json.Unmarshal(resp.Body.Bytes(), &body)).To(BeNil())
+		Expect(body.Count).To(Equal(0))
+		Expect(body.Results).NotTo(BeNil())
+		Expect(body.Results).To(HaveLen(0))
+		// Verify results serialises as [] not null
+		Expect(resp.Body.String()).To(ContainSubstring(`"results":[]`))
+	})
+
 	It("returns an error status when the store fails", func() {
-		store.SearchReturns(nil, errors.New("boom"))
+		store.SearchReturns(secret.SearchRecords(nil), errors.New("boom"))
 
 		req := httptest.NewRequest(http.MethodGet, "/api/secrets/", nil)
 		resp := httptest.NewRecorder()

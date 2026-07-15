@@ -47,18 +47,18 @@ type SecretStore struct {
 	reEncryptReturnsOnCall map[int]struct {
 		result1 error
 	}
-	SearchStub        func(context.Context, string) (secret.Keys, error)
+	SearchStub        func(context.Context, string) (secret.SearchRecords, error)
 	searchMutex       sync.RWMutex
 	searchArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
 	}
 	searchReturns struct {
-		result1 secret.Keys
+		result1 secret.SearchRecords
 		result2 error
 	}
 	searchReturnsOnCall map[int]struct {
-		result1 secret.Keys
+		result1 secret.SearchRecords
 		result2 error
 	}
 	UpsertStub        func(context.Context, secret.Key, secret.Secret) error
@@ -267,7 +267,7 @@ func (fake *SecretStore) ReEncryptReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *SecretStore) Search(arg1 context.Context, arg2 string) (secret.Keys, error) {
+func (fake *SecretStore) Search(arg1 context.Context, arg2 string) (secret.SearchRecords, error) {
 	fake.searchMutex.Lock()
 	ret, specificReturn := fake.searchReturnsOnCall[len(fake.searchArgsForCall)]
 	fake.searchArgsForCall = append(fake.searchArgsForCall, struct {
@@ -293,7 +293,7 @@ func (fake *SecretStore) SearchCallCount() int {
 	return len(fake.searchArgsForCall)
 }
 
-func (fake *SecretStore) SearchCalls(stub func(context.Context, string) (secret.Keys, error)) {
+func (fake *SecretStore) SearchCalls(stub func(context.Context, string) (secret.SearchRecords, error)) {
 	fake.searchMutex.Lock()
 	defer fake.searchMutex.Unlock()
 	fake.SearchStub = stub
@@ -306,28 +306,28 @@ func (fake *SecretStore) SearchArgsForCall(i int) (context.Context, string) {
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *SecretStore) SearchReturns(result1 secret.Keys, result2 error) {
+func (fake *SecretStore) SearchReturns(result1 secret.SearchRecords, result2 error) {
 	fake.searchMutex.Lock()
 	defer fake.searchMutex.Unlock()
 	fake.SearchStub = nil
 	fake.searchReturns = struct {
-		result1 secret.Keys
+		result1 secret.SearchRecords
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *SecretStore) SearchReturnsOnCall(i int, result1 secret.Keys, result2 error) {
+func (fake *SecretStore) SearchReturnsOnCall(i int, result1 secret.SearchRecords, result2 error) {
 	fake.searchMutex.Lock()
 	defer fake.searchMutex.Unlock()
 	fake.SearchStub = nil
 	if fake.searchReturnsOnCall == nil {
 		fake.searchReturnsOnCall = make(map[int]struct {
-			result1 secret.Keys
+			result1 secret.SearchRecords
 			result2 error
 		})
 	}
 	fake.searchReturnsOnCall[i] = struct {
-		result1 secret.Keys
+		result1 secret.SearchRecords
 		result2 error
 	}{result1, result2}
 }

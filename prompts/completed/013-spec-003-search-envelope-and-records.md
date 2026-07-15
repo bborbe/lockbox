@@ -1,8 +1,13 @@
 ---
-status: approved
+status: completed
 spec: [003-search-name-compat]
+summary: Made Lockbox search endpoint TeamVault-compatible by changing Store.Search to return per-match SearchRecords, adding count/next/previous/results envelope, and updating mock, tests, contract test, scenario, README and CHANGELOG
+execution_id: lockbox-search-name-exec-013-spec-003-search-envelope-and-records
+dark-factory-version: dev
 created: "2026-07-15T21:20:00Z"
 queued: "2026-07-15T21:27:21Z"
+started: "2026-07-15T21:28:52Z"
+completed: "2026-07-15T21:31:27Z"
 branch: dark-factory/search-name-compat
 ---
 <summary>
