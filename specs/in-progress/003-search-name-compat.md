@@ -1,11 +1,12 @@
 ---
-status: prompted
+status: verifying
 tags:
     - dark-factory
     - spec
 approved: "2026-07-15T21:14:34Z"
 generating: "2026-07-15T21:14:35Z"
 prompted: "2026-07-15T21:22:52Z"
+verifying: "2026-07-15T21:31:27Z"
 branch: dark-factory/search-name-compat
 ---
 
