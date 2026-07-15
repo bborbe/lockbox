@@ -11,6 +11,8 @@ package api
 // SecretMetadata is the body of GET /api/secrets/{key}/.
 // current_revision is an absolute URL pointing at the revision-data endpoint.
 type SecretMetadata struct {
+	// Name is the human-readable secret name; may be empty.
+	Name            string `json:"name"`
 	Username        string `json:"username"`
 	URL             string `json:"url"`
 	CurrentRevision string `json:"current_revision"`

@@ -20,7 +20,7 @@ Mirrors the TeamVault API (see `cmd/fakevault` in teamvault-cli):
 | Endpoint | Response |
 |----------|----------|
 | `POST /api/secrets/` | create a secret (server-generated key); returns `{hashid, api_url, content_type, name, username, url}` |
-| `GET /api/secrets/{key}/` | `{username, url, current_revision}` |
+| `GET /api/secrets/{key}/` | `{name, username, url, current_revision}` |
 | `GET /api/secret-revisions/{key}/data` | `{password, file}` |
 | `GET /api/secrets/?search=q` | `{results: [{api_url}]}` |
 | `PATCH /api/secrets/{hashid}/` | update metadata and/or value; returns the secret representation |

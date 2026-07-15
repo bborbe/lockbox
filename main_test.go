@@ -153,7 +153,7 @@ var _ = Describe("TeamVault contract", func() {
 					Expect(postResult.Username).To(Equal("alice"))
 					Expect(postResult.URL).To(Equal("https://example.com"))
 
-					// GET metadata — body must be exactly {username, url, current_revision}
+					// GET metadata — body must be exactly {name, username, url, current_revision}
 					metadataResp := doJSON(
 						router,
 						http.MethodGet,
@@ -166,10 +166,12 @@ var _ = Describe("TeamVault contract", func() {
 					var metadata map[string]any
 					err = json.NewDecoder(metadataResp.Body).Decode(&metadata)
 					Expect(err).To(BeNil())
+					Expect(metadata).To(HaveKey("name"))
 					Expect(metadata).To(HaveKey("username"))
 					Expect(metadata).To(HaveKey("url"))
 					Expect(metadata).To(HaveKey("current_revision"))
-					Expect(metadata).To(HaveLen(3))
+					Expect(metadata).To(HaveLen(4))
+					Expect(metadata["name"]).To(Equal("gh"))
 					Expect(metadata["username"]).To(Equal("alice"))
 					Expect(metadata["url"]).To(Equal("https://example.com"))
 

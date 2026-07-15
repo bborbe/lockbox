@@ -34,6 +34,7 @@ var _ = Describe("SecretMetadataHandler", func() {
 
 	It("returns the secret metadata with an absolute current_revision url", func() {
 		store.GetReturns(&secret.Secret{
+			Name:     "gh",
 			Username: "alice",
 			URL:      "https://example.com",
 			Password: "s3cr3t",
@@ -48,6 +49,7 @@ var _ = Describe("SecretMetadataHandler", func() {
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		var body api.SecretMetadata
 		Expect(json.Unmarshal(resp.Body.Bytes(), &body)).To(BeNil())
+		Expect(body.Name).To(Equal("gh"))
 		Expect(body.Username).To(Equal("alice"))
 		Expect(body.URL).To(Equal("https://example.com"))
 		Expect(
