@@ -8,7 +8,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
-## Unreleased
+## v0.7.0
 
 - build: also build and ship the `reencrypt` sweep binary in the Docker image (`/reencrypt`) so key rotation can retire old keys on the server via `docker run --entrypoint /reencrypt` (server `/main` entrypoint unchanged)
 
