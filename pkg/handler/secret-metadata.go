@@ -33,6 +33,7 @@ func NewSecretMetadataHandler(store secret.Store) libhttp.WithError {
 			prefix := apiPrefix(req, "secrets/"+key.String()+"/")
 			revision := absoluteURL(req, prefix+"secret-revisions/"+key.String()+"/")
 			return api.SecretMetadata{
+				Name:            found.Name,
 				Username:        found.Username,
 				URL:             found.URL,
 				CurrentRevision: revision,

@@ -21,18 +21,25 @@ func NewSecretSearchHandler(store secret.Store) libhttp.WithError {
 	return libhttp.NewJSONHandler(libhttp.JSONHandlerFunc(
 		func(ctx context.Context, req *http.Request) (any, error) {
 			query := req.URL.Query().Get("search")
-			keys, err := store.Search(ctx, query)
+			records, err := store.Search(ctx, query)
 			if err != nil {
 				return nil, errors.Wrapf(ctx, err, "search secrets for %q failed", query)
 			}
 			prefix := apiPrefix(req, "secrets/")
-			results := make([]api.SearchResult, 0, len(keys))
-			for _, key := range keys {
+			results := make([]api.SearchResult, 0, len(records))
+			for _, record := range records {
 				results = append(results, api.SearchResult{
-					APIURL: absoluteURL(req, prefix+"secrets/"+key.String()+"/"),
+					Hashid:   record.Key.String(),
+					APIURL:   absoluteURL(req, prefix+"secrets/"+record.Key.String()+"/"),
+					Name:     record.Name,
+					Username: record.Username,
+					URL:      record.URL,
 				})
 			}
-			return api.SearchResults{Results: results}, nil
+			return api.SearchResults{
+				Count:   len(results),
+				Results: results,
+			}, nil
 		},
 	))
 }

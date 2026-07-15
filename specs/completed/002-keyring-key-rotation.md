@@ -1,8 +1,10 @@
 ---
-status: prompted
+status: completed
 approved: "2026-07-14T19:48:12Z"
 generating: "2026-07-14T19:48:29Z"
 prompted: "2026-07-14T19:58:42Z"
+verifying: "2026-07-15T21:13:24Z"
+completed: "2026-07-15T21:39:46Z"
 branch: dark-factory/keyring-key-rotation
 ---
 

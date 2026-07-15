@@ -66,6 +66,8 @@ SEARCH_KEY="$(echo "$SEARCH_CREATE_RESP" | jq -r .hashid)"
 SEARCH_RESP="$(lb_curl "/api/secrets/?search=search-target")"
 assert_contains "search results contain the right api_url" "/api/secrets/$SEARCH_KEY/" \
 	"$(echo "$SEARCH_RESP" | jq -r '.results[].api_url' | tr '\n' ' ')"
+assert_contains "search results contain the secret name" "search-target-secret" \
+	"$(echo "$SEARCH_RESP" | jq -r '.results[].name' | tr '\n' ' ')"
 
 NOAUTH_STATUS="$(curl -s -o /dev/null -w '%{http_code}' "$LOCKBOX_URL/api/secrets/$KEY/")"
 assert_eq "no-auth status" "401" "$NOAUTH_STATUS"
