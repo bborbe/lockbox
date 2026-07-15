@@ -10,6 +10,16 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     -ldflags "-s -w" \
     -installsuffix cgo \
     -o /main
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=bind,target=. \
+    GOCACHE=/root/.cache/go-build \
+    GOMODCACHE=/go/pkg/mod \
+    CGO_ENABLED=0 GOOS=linux go build \
+    -trimpath \
+    -ldflags "-s -w" \
+    -installsuffix cgo \
+    -o /reencrypt ./cmd/reencrypt
 CMD ["/bin/bash"]
 
 FROM alpine:3.24 AS alpine
@@ -31,6 +41,7 @@ LABEL org.opencontainers.image.created="${BUILD_DATE}"
 LABEL org.opencontainers.image.revision="${BUILD_GIT_COMMIT}"
 
 COPY --from=build /main /main
+COPY --from=build /reencrypt /reencrypt
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /usr/local/go/lib/time/zoneinfo.zip /
 ENV ZONEINFO=/zoneinfo.zip
