@@ -4,17 +4,17 @@ go 1.26.6
 
 require (
 	github.com/bborbe/boltkv v1.14.8
-	github.com/bborbe/crypto v1.0.4
-	github.com/bborbe/errors v1.5.17
-	github.com/bborbe/http v1.26.20
-	github.com/bborbe/kv v1.21.9
+	github.com/bborbe/crypto v1.0.5
+	github.com/bborbe/errors v1.5.18
+	github.com/bborbe/http v1.26.22
+	github.com/bborbe/kv v1.21.10
 	github.com/bborbe/log v1.6.22
 	github.com/bborbe/memorykv v1.6.5
 	github.com/bborbe/metrics v0.5.12
-	github.com/bborbe/run v1.9.34
-	github.com/bborbe/sentry v1.9.24
+	github.com/bborbe/run v1.9.35
+	github.com/bborbe/sentry v1.9.25
 	github.com/bborbe/service v1.10.8
-	github.com/bborbe/time v1.27.8
+	github.com/bborbe/time v1.27.9
 	github.com/getsentry/sentry-go v0.48.0
 	github.com/golang/glog v1.2.5
 	github.com/gorilla/mux v1.8.1
@@ -25,10 +25,10 @@ require (
 
 require (
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
-	github.com/bborbe/argument/v2 v2.12.34 // indirect
-	github.com/bborbe/collection v1.20.20 // indirect
-	github.com/bborbe/math v1.3.18 // indirect
-	github.com/bborbe/parse v1.10.19 // indirect
+	github.com/bborbe/argument/v2 v2.12.35 // indirect
+	github.com/bborbe/collection v1.20.21 // indirect
+	github.com/bborbe/math v1.3.19 // indirect
+	github.com/bborbe/parse v1.10.20 // indirect
 	github.com/bborbe/validation v1.4.19 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
