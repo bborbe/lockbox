@@ -20,6 +20,13 @@ created: "2026-09-03T20:20:00Z"
 
 `make test` (and therefore `make precommit`) completes normally under any Go toolchain from 1.26 onward, including 1.27.0. The TeamVault contract suite in `main_test.go` passes without hanging, and a future `go.mod` bump to 1.27.0 is gated only by the normal update flow, not by a test-helper hang.
 
+## Non-goals
+
+- Do NOT change production code or any handler/decode logic — the bug is confined to the test helper; production JSON decoding is unaffected.
+- Do NOT pin, constrain, or work around the `go.mod` directive or any toolchain version to dodge the hang — the fix must make the suite pass, not hide the failure.
+- Do NOT change JSON decoder settings, request bodies, or any `It(...)` / `DescribeTable(...)` assertion.
+- Do NOT add a scenario — the contract suite is itself the test that exercises this behavior.
+
 ## Reproduction
 
 Exact steps (verified 2026-09-03 on Go 1.27.1 darwin/arm64, and matching the agent Job output from 2026-08-27):
@@ -71,7 +78,7 @@ Both defects must be fixed together: EOF alone (with the discard still in place)
 
 ## Acceptance Criteria
 
-- [ ] `main_test.go`'s `reader.Read` no longer violates the `io.Reader` contract: it preserves unconsumed bytes across calls and returns `io.EOF` once its buffer is exhausted. — evidence: code review of the diff.
+- [ ] `main_test.go`'s `reader.Read` no longer violates the `io.Reader` contract: it preserves unconsumed bytes across calls and returns `io.EOF` once its buffer is exhausted. — evidence: `git diff main_test.go` shows the remainder-preserving advance (`r.data = r.data[n:]`) and an `io.EOF` return path on exhaustion (file-diff shape).
 - [ ] `go test -mod=mod -timeout 120s -p 1 .` on the fixed commit completes under **both** Go 1.26.6 and Go 1.27.x, all `TestContractSuite` specs passing. — evidence: two green test runs (one per toolchain), timings < a few seconds.
 - [ ] `make precommit` completes for the fixed commit under Go 1.27. — evidence: full precommit run green (this is the gate the agent runs).
 - [ ] A `## Unreleased` CHANGELOG entry documents the fix. — evidence: CHANGELOG diff.
@@ -99,6 +106,10 @@ make precommit                                                 # expect: green, 
 - All existing `It(...)` / `DescribeTable(...)` assertions must pass unchanged.
 - The helper must remain an `io.ReadCloser` (it is passed to `httptest.NewRequest` as the request body).
 - Repo convention: `goimports` / `gofmt` clean; BSD license header preserved; no `fmt.Errorf` (use `errors` wrapping only if an error path is added — none should be needed).
+
+## Do-Nothing Option
+
+Leaving the bug unfixed is not acceptable: `bborbe/lockbox` stays pinned on Go 1.26.6 while the rest of the fleet moves to 1.27.0; every `github-update-go-agent` attempt burns 600s of compute and escalates with the same unhelpful `exit 2, no parseable findings` message; and the failure is only a `go.mod` bump away from also breaking CI. The fix is a two-line test-helper change with no production risk.
 
 ## Failure Modes
 
