@@ -1,7 +1,8 @@
 ---
-status: draft
-kind: bug
-created: "2026-09-03T20:20:00Z"
+status: approved
+approved: "2026-09-03T18:15:05Z"
+generating: "2026-09-03T18:15:06Z"
+branch: dark-factory/bug-main-test-reader-hangs-go-1-27
 ---
 
 ## Summary
