@@ -8,6 +8,10 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
+## Unreleased
+
+- fix: make the `reader` test helper in `main_test.go` satisfy the `io.Reader` contract (preserve unconsumed bytes across reads, return `io.EOF` when exhausted) so the TeamVault contract suite no longer hangs under Go 1.27's chunked JSON decoder — `make test` now completes on both Go 1.26 and 1.27
+
 ## v0.9.0
 
 - feat: opt into `autoMerge.trivial` for mechanically-trivial update PRs

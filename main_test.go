@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -80,8 +81,11 @@ func doJSON(
 type reader struct{ data []byte }
 
 func (r *reader) Read(p []byte) (n int, _ error) {
+	if len(r.data) == 0 {
+		return 0, io.EOF
+	}
 	n = copy(p, r.data)
-	r.data = r.data[:0]
+	r.data = r.data[n:]
 	return n, nil
 }
 
@@ -757,4 +761,30 @@ var _ = Describe("createCrypter", func() {
 			),
 		}),
 	)
+})
+
+var _ = Describe("reader", func() {
+	It("preserves unconsumed bytes across reads and returns io.EOF when exhausted", func() {
+		r := &reader{data: []byte("abcdefghij")}
+		buf := make([]byte, 4)
+
+		n, err := r.Read(buf)
+		Expect(n).To(Equal(4))
+		Expect(err).To(BeNil())
+		Expect(string(buf)).To(Equal("abcd"))
+
+		n, err = r.Read(buf)
+		Expect(n).To(Equal(4))
+		Expect(err).To(BeNil())
+		Expect(string(buf)).To(Equal("efgh"))
+
+		n, err = r.Read(buf)
+		Expect(n).To(Equal(2))
+		Expect(err).To(BeNil())
+		Expect(string(buf[:2])).To(Equal("ij"))
+
+		n, err = r.Read(buf)
+		Expect(n).To(Equal(0))
+		Expect(err).To(Equal(io.EOF))
+	})
 })
