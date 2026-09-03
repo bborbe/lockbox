@@ -1,8 +1,9 @@
 ---
-status: verifying
+status: completed
 approved: "2026-09-03T18:15:05Z"
 generating: "2026-09-03T18:15:06Z"
 verifying: "2026-09-03T18:24:56Z"
+completed: "2026-09-03T19:03:58Z"
 branch: dark-factory/bug-main-test-reader-hangs-go-1-27
 ---
 
