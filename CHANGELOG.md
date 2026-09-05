@@ -8,7 +8,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
-## Unreleased
+## v0.9.2
 
 - fix: bump `ERRCHECK_VERSION` to v1.20.0 in `tools.env` — v1.10.0 crashes with `internal error: package "bytes" without types` under the Go 1.27 toolchain, failing `make precommit` and blocking the fleet's go-update agent from bumping to Go 1.27.1
 
