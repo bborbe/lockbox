@@ -1,6 +1,6 @@
 module github.com/bborbe/lockbox
 
-go 1.27.2
+go 1.27.3
 
 require (
 	github.com/bborbe/boltkv v1.16.2
@@ -13,8 +13,8 @@ require (
 	github.com/bborbe/metrics v0.6.7
 	github.com/bborbe/run v1.11.2
 	github.com/bborbe/sentry v1.10.4
-	github.com/bborbe/service v1.10.16
-	github.com/bborbe/time v1.27.16
+	github.com/bborbe/service v1.11.0
+	github.com/bborbe/time v1.27.17
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/golang/glog v1.2.5
 	github.com/gorilla/mux v1.8.1
@@ -29,7 +29,7 @@ require (
 	github.com/bborbe/collection v1.21.2 // indirect
 	github.com/bborbe/math v1.4.15 // indirect
 	github.com/bborbe/parse v1.12.3 // indirect
-	github.com/bborbe/validation v1.5.4 // indirect
+	github.com/bborbe/validation v1.5.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
