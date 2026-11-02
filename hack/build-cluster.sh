@@ -59,10 +59,22 @@ printf '%s' "${PUSH_SECRET}" | grep -qE '^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$' ||
 	die "PUSH_SECRET '${PUSH_SECRET}' is not a valid Kubernetes secret name"
 printf '%s' "${TIMEOUT}" | grep -qE '^[0-9]+$' ||
 	die "TIMEOUT '${TIMEOUT}' is not a number of seconds"
+printf '%s' "${NAMESPACE}" | grep -qE '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$' ||
+	die "NAMESPACE '${NAMESPACE}' is not a valid Kubernetes namespace name"
 case "${PUSH}" in
 true | false) ;;
 *) die "PUSH '${PUSH}' must be true or false" ;;
 esac
+
+# `grep -qE '^...$'` matches when ANY line matches, so a value carrying a newline
+# passes the whitelist on its first line and its remaining lines are injected
+# verbatim by sed into the YAML and the embedded `sh -c` script. Reject embedded
+# newlines for every value before rendering.
+for _var in REF TAG IMAGE REPO_URL DOCKERFILE PUSH_SECRET TIMEOUT NAMESPACE; do
+	case "${!_var}" in
+	*$'\n'*) die "${_var} contains a newline, which is not allowed" ;;
+	esac
+done
 
 if [ -n "${KUBECONFIG_PATH}" ] && [ ! -f "${KUBECONFIG_PATH}" ]; then
 	die "BUILD_TARGET '${BUILD_TARGET}' needs the kubeconfig ${KUBECONFIG_PATH}, which does not exist"
@@ -86,6 +98,8 @@ printf '%s' "${SOURCE_DATE_EPOCH}" | grep -qE '^[0-9]+$' ||
 
 JOB_NAME="build-$(printf '%s' "${TAG}" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9.-]/-/g')"
 JOB_NAME="${JOB_NAME:0:63}"
+# Truncation can leave a trailing '.' or '-', which is not a valid DNS-1123 name.
+JOB_NAME="$(printf '%s' "${JOB_NAME}" | sed -e 's/[-.]*$//')"
 
 rendered="$(mktemp)"
 trap 'rm -f "${rendered}"' EXIT
@@ -101,6 +115,7 @@ sed \
 	-e "s|__PUSH_SECRET__|${PUSH_SECRET}|g" \
 	-e "s|__DEADLINE_SECONDS__|${TIMEOUT}|g" \
 	-e "s|__SOURCE_DATE_EPOCH__|${SOURCE_DATE_EPOCH}|g" \
+	-e "s|__NAMESPACE__|${NAMESPACE}|g" \
 	"${TEMPLATE}" >"${rendered}"
 
 if kc -n "${NAMESPACE}" get job "${JOB_NAME}" --ignore-not-found -o name | grep -q .; then

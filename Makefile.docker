@@ -66,5 +66,8 @@ apply:
 		cd ..; \
 	done
 
+# buca is the local build-and-deploy path. With BUILD_TARGET set the image is
+# pushed at $(VERSION) while the manifests deploy $(BRANCH), so buca is not
+# meaningful for a cluster build — run it with the default local arm only.
 .PHONY: buca
 buca: build upload clean apply
