@@ -49,7 +49,7 @@ upload:
 ifeq ($(BUILD_TARGET),local)
 	docker push $(DOCKER_REGISTRY)/$(SERVICE):$(BRANCH)
 else
-	@echo "upload: nothing to do — the cluster arm already pushed $(DOCKER_REGISTRY)/$(SERVICE):$(BRANCH)"
+	@echo "upload: nothing to do — the cluster arm already pushed the image"
 endif
 
 .PHONY: clean
