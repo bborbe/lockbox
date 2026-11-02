@@ -8,7 +8,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
-## Unreleased
+## v0.10.1
 
 - fix: harden the cluster build runner — the namespace is read back from the rendered manifest instead of the environment, a kubectl error fails loudly instead of reading as an absent Job, `TIMEOUT` is parsed as base 10, `SOURCE_DATE_EPOCH` is covered by the newline rejection, the clone init container drops all capabilities and cannot escalate, the build pod's memory requests are small enough to schedule on a busy node, and `upload` / `clean` say they did nothing when `BUILD_TARGET` is not `local`
 
