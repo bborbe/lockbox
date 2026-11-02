@@ -8,7 +8,7 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
-## Unreleased
+## v0.10.2
 
 - fix: keep the existence probe's stderr out of the existence signal — a warning on a successful `kubectl get` (the client/server version-skew warning) was read as an existing Job and failed every build with a false message
 
