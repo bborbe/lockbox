@@ -3,18 +3,18 @@ module github.com/bborbe/lockbox
 go 1.27.3
 
 require (
-	github.com/bborbe/boltkv v1.16.2
-	github.com/bborbe/crypto v1.1.4
-	github.com/bborbe/errors v1.6.3
-	github.com/bborbe/http v1.26.30
-	github.com/bborbe/kv v1.21.18
-	github.com/bborbe/log v1.7.4
+	github.com/bborbe/boltkv v1.16.6
+	github.com/bborbe/crypto v1.1.7
+	github.com/bborbe/errors v1.6.6
+	github.com/bborbe/http v1.26.32
+	github.com/bborbe/kv v1.21.28
+	github.com/bborbe/log v1.7.6
 	github.com/bborbe/memorykv v1.6.5
-	github.com/bborbe/metrics v0.6.7
-	github.com/bborbe/run v1.11.2
-	github.com/bborbe/sentry v1.10.4
-	github.com/bborbe/service v1.11.0
-	github.com/bborbe/time v1.27.17
+	github.com/bborbe/metrics v0.6.9
+	github.com/bborbe/run v1.11.9
+	github.com/bborbe/sentry v1.10.7
+	github.com/bborbe/service v1.11.2
+	github.com/bborbe/time v1.27.25
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/golang/glog v1.2.5
 	github.com/gorilla/mux v1.8.1
@@ -25,27 +25,28 @@ require (
 
 require (
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
-	github.com/bborbe/argument/v2 v2.13.6 // indirect
-	github.com/bborbe/collection v1.21.2 // indirect
-	github.com/bborbe/math v1.4.15 // indirect
-	github.com/bborbe/parse v1.12.3 // indirect
-	github.com/bborbe/validation v1.5.5 // indirect
+	github.com/bborbe/argument/v2 v2.13.9 // indirect
+	github.com/bborbe/collection v1.21.5 // indirect
+	github.com/bborbe/math v1.4.18 // indirect
+	github.com/bborbe/parse v1.12.5 // indirect
+	github.com/bborbe/validation v1.5.8 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20261016150608-1facf8f91b50 // indirect
+	github.com/google/pprof v0.0.0-20261026192309-dbd0ed30aa88 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/pandatix/go-abnf v0.5.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
-	github.com/prometheus/common v0.72.1 // indirect
-	github.com/prometheus/procfs v0.22.0 // indirect
+	github.com/prometheus/common v0.73.1 // indirect
+	github.com/prometheus/procfs v0.23.0 // indirect
 	go.etcd.io/bbolt v1.5.0 // indirect
-	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976 // indirect
 	golang.org/x/mod v0.42.0 // indirect
-	golang.org/x/net v0.61.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
