@@ -1,7 +1,19 @@
 DIRS += $(shell find */* -maxdepth 0 -name Makefile -exec dirname "{}" \;)
 
+# BUILD_TARGET selects where `make build` runs. `local` (the default) uses the
+# local Docker daemon; any other value names a cluster alias (sun / nukedev /
+# nukeprod) and builds inside that cluster as a Job rendered from
+# hack/build-job.yaml.
+BUILD_TARGET ?= local
+BUILD_NAMESPACE ?= build
+BUILD_TIMEOUT ?= 3600
+BUILD_REPO_URL ?= https://github.com/$(SERVICE).git
+BUILD_DOCKERFILE ?= Dockerfile
+BUILD_PUSH_SECRET ?= buildkit-push
+
 .PHONY: build
 build:
+ifeq ($(BUILD_TARGET),local)
 	DOCKER_BUILDKIT=1 \
 	docker build \
 	--rm=true \
@@ -13,15 +25,37 @@ build:
 	--build-arg BUILD_DATE=$$(date -u +%Y-%m-%dT%H:%M:%SZ) \
 	-t $(DOCKER_REGISTRY)/$(SERVICE):$(BRANCH) \
 	-f Dockerfile .
+else
+# The cluster arm publishes at VERSION rather than BRANCH. VERSION has no
+# default: hack/build-cluster.sh already dies on an empty TAG, and any default
+# would publish a tag the checked-out tree does not correspond to. Pass it
+# explicitly:
+#   make build BUILD_TARGET=<cluster> REF=<sha> VERSION=<tag>
+	BUILD_TARGET='$(BUILD_TARGET)' \
+	NAMESPACE='$(BUILD_NAMESPACE)' \
+	REPO_URL='$(BUILD_REPO_URL)' \
+	REF='$(REF)' \
+	TAG='$(VERSION)' \
+	DOCKERFILE='$(BUILD_DOCKERFILE)' \
+	IMAGE='$(DOCKER_REGISTRY)/$(SERVICE)' \
+	PUSH='true' \
+	PUSH_SECRET='$(BUILD_PUSH_SECRET)' \
+	TIMEOUT='$(BUILD_TIMEOUT)' \
+	hack/build-cluster.sh
+endif
 
 .PHONY: upload
 upload:
+ifeq ($(BUILD_TARGET),local)
 	docker push $(DOCKER_REGISTRY)/$(SERVICE):$(BRANCH)
+endif
 
 .PHONY: clean
 clean:
+ifeq ($(BUILD_TARGET),local)
 	docker rmi $(DOCKER_REGISTRY)/$(SERVICE):$(BRANCH) || true
 	docker builder prune --max-used-space 21474836480 -f || true
+endif
 
 .PHONY: apply
 apply:
@@ -32,5 +66,8 @@ apply:
 		cd ..; \
 	done
 
+# buca is the local build-and-deploy path. With BUILD_TARGET set the image is
+# pushed at $(VERSION) while the manifests deploy $(BRANCH), so buca is not
+# meaningful for a cluster build — run it with the default local arm only.
 .PHONY: buca
 buca: build upload clean apply
