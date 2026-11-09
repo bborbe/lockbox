@@ -8,6 +8,10 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
+## Unreleased
+
+- fix: delete a failed or timed-out build Job after printing its logs, so a single failure no longer holds the K8sPodStatus alert; align build-job ttlSecondsAfterFinished to 46800
+
 ## v0.10.3
 
 - chore: restate the do-not-merge contract in the gate workflow
