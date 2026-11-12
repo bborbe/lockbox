@@ -1,20 +1,20 @@
 module github.com/bborbe/lockbox
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/bborbe/boltkv v1.16.8
 	github.com/bborbe/crypto v1.1.7
 	github.com/bborbe/errors v1.6.6
-	github.com/bborbe/http v1.26.33
+	github.com/bborbe/http v1.26.34
 	github.com/bborbe/kv v1.21.29
-	github.com/bborbe/log v1.7.8
+	github.com/bborbe/log v1.7.9
 	github.com/bborbe/memorykv v1.6.5
-	github.com/bborbe/metrics v0.6.11
+	github.com/bborbe/metrics v0.6.12
 	github.com/bborbe/run v1.11.11
 	github.com/bborbe/sentry v1.10.7
 	github.com/bborbe/service v1.11.3
-	github.com/bborbe/time v1.27.27
+	github.com/bborbe/time v1.27.28
 	github.com/getsentry/sentry-go v0.50.0
 	github.com/golang/glog v1.2.5
 	github.com/gorilla/mux v1.8.1
@@ -25,22 +25,22 @@ require (
 
 require (
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
-	github.com/bborbe/argument/v2 v2.13.10 // indirect
-	github.com/bborbe/collection v1.21.6 // indirect
-	github.com/bborbe/math v1.4.19 // indirect
-	github.com/bborbe/parse v1.12.6 // indirect
+	github.com/bborbe/argument/v2 v2.13.11 // indirect
+	github.com/bborbe/collection v1.21.7 // indirect
+	github.com/bborbe/math v1.4.20 // indirect
+	github.com/bborbe/parse v1.12.7 // indirect
 	github.com/bborbe/validation v1.5.9 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/pprof v0.0.0-20261110164715-8bb1ee682bd8 // indirect
+	github.com/google/pprof v0.0.0-20261111200114-fac431ef4d26 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pandatix/go-abnf v0.5.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
-	github.com/prometheus/common v0.73.1 // indirect
+	github.com/prometheus/common v0.74.0 // indirect
 	github.com/prometheus/procfs v0.23.0 // indirect
 	go.etcd.io/bbolt v1.5.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.6 // indirect
