@@ -8,6 +8,11 @@ Please choose versions by [Semantic Versioning](http://semver.org/).
 * MINOR version when you add functionality in a backwards-compatible manner, and
 * PATCH version when you make backwards-compatible bug fixes.
 
+## Unreleased
+
+- chore: remove stale vulnerability ignore IDs that no longer apply
+- ci: install Trivy from a pinned release tarball with sha256 verification (apt-key is gone from Ubuntu 26.04)
+
 ## v0.11.1
 
 - chore: update Go to 1.27.4 and github.com/bborbe/http to v1.26.34, github.com/bborbe/log to v1.7.9, github.com/bborbe/metrics to v0.6.12, github.com/bborbe/time to v1.27.28
